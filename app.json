@@ -43,6 +43,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "97fe413e-bedf-4871-a508-b538bc51b429"
+      }
+    },
+    "owner": "emotion-work"
   }
 }
