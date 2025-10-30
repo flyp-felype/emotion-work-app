@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -21,8 +22,7 @@ export default function LoginScreen() {
 
   const handleFirstAccess = () => {
     // Navegar para tela de primeiro acesso
-    console.log("Primeiro acesso");
-    // router.push('/auth/first-access');
+    router.push("/auth/first-access"); // Descomentar esta linha
   };
 
   return (

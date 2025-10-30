@@ -14,6 +14,7 @@ import { ThemedView } from "../../components/themed-view";
 export default function FirstAccessScreen() {
   const handleSubmit = async (data: {
     cpf: string;
+    matricula: string;
     dataNascimento: Date;
     senha: string;
     confirmarSenha: string;

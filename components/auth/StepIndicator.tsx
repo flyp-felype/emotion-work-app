@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { useThemeColor } from "../../../hooks/use-theme-color";
-import { ThemedText } from "../../themed-text";
+import { useThemeColor } from "../../hooks/use-theme-color";
+import { ThemedText } from "../themed-text";
 
 interface StepIndicatorProps {
   currentStep: number;
