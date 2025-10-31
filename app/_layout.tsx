@@ -29,8 +29,10 @@ export default function RootLayout() {
           name="auth/first-access"
           options={{ headerShown: false }}
         />
+        <Stack.Screen name="home/index" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
-      <StatusBar hidden={true} />
+      <StatusBar hidden={false} />
     </ThemeProvider>
   );
 }

@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { ThemedText } from "../themed-text";
@@ -15,6 +16,7 @@ export function LoginForm({ onLogin, onFirstAccess }: LoginFormProps) {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    router.replace("/home");
     if (!matricula.trim() || !senha.trim()) {
       Alert.alert("Erro", "Por favor, preencha todos os campos");
       return;
