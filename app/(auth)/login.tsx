@@ -15,9 +15,7 @@ export default function LoginScreen() {
   const handleLogin = async (matricula: string, senha: string) => {
     // Aqui você implementará a lógica de autenticação
     console.log("Login:", { matricula, senha });
-
-    // Exemplo de navegação após login bem-sucedido
-    // router.replace('/(tabs)');
+    router.replace("/(tabs)");
   };
 
   const handleFirstAccess = () => {

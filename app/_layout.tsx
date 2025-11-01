@@ -3,35 +3,18 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
-
-// export const unstable_settings = {
-//   anchor: "(tabs)",
-// };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="auth/first-access"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen name="home/index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+      <Slot />
       <StatusBar hidden={false} />
     </ThemeProvider>
   );

@@ -1,12 +1,14 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HapticTab } from "../../components/haptic-tab";
 import { useThemeColor } from "../../hooks/use-theme-color";
 
 export default function TabLayout() {
   const tintColor = useThemeColor({}, "tint");
   const iconColor = useThemeColor({}, "icon");
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -19,8 +21,8 @@ export default function TabLayout() {
           backgroundColor: "#FFFFFF",
           borderTopWidth: 1,
           borderTopColor: "#E5E7EB",
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom, // Altura + área segura inferior
+          paddingBottom: insets.bottom, // Padding dinâmico baseado no dispositivo
           paddingTop: 8,
         },
       }}
