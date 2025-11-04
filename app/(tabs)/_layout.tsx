@@ -1,15 +1,19 @@
-import { ThemedText } from "@/components/themed-text";
 import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Tabs } from "expo-router";
+import { Tabs, useSegments } from "expo-router";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HapticTab } from "../../components/haptic-tab";
 import { useThemeColor } from "../../hooks/use-theme-color";
 
 // Componente customizado para o botão de Check-in destacado
 function CustomCheckInButton({ children, onPress }: any) {
+  const tintColor = useThemeColor({}, "tint");
+  const iconColor = useThemeColor({}, "icon");
+  const segments = useSegments();
+  const focused = segments[1] === "redeem";
+
   return (
     <TouchableOpacity
       style={styles.customButton}
@@ -22,11 +26,24 @@ function CustomCheckInButton({ children, onPress }: any) {
         end={{ x: 1, y: 1 }}
         style={styles.circleButton}
       >
-        {children}
+        <FontAwesome5
+          name="check"
+          size={20}
+          color={focused ? tintColor : "#FFF"}
+        />
       </LinearGradient>
+      <Text
+        style={[
+          styles.checkInLabel,
+          { color: focused ? tintColor : iconColor },
+        ]}
+      >
+        Check-in
+      </Text>
     </TouchableOpacity>
   );
 }
+
 export default function TabLayout() {
   const tintColor = useThemeColor({}, "tint");
   const iconColor = useThemeColor({}, "icon");
@@ -61,27 +78,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="redeem"
         options={{
-          title: "Check-in",
+          title: "",
           tabBarButton: CustomCheckInButton,
-          tabBarIcon: ({ focused }) => (
-            <FontAwesome5
-              name="check"
-              size={25}
-              color={focused ? tintColor : "#FFFFFF"}
-            />
-          ),
-          tabBarLabel: ({ focused }) => (
-            <View>
-              <ThemedText
-                style={{
-                  color: focused ? tintColor : "#FFFFFF",
-                  fontSize: 10,
-                }}
-              >
-                Check-in
-              </ThemedText>
-            </View>
-          ),
+          tabBarIcon: () => null,
         }}
       />
       <Tabs.Screen
@@ -99,14 +98,14 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   customButton: {
-    top: -20, // Move o botão para cima
+    top: -20,
     justifyContent: "center",
     alignItems: "center",
     flex: 1,
   },
   circleButton: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     borderRadius: 35,
     justifyContent: "center",
     alignItems: "center",
@@ -118,5 +117,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
+  },
+  checkInLabel: {
+    fontSize: 10,
+    marginTop: 4,
+    fontWeight: "500",
   },
 });
