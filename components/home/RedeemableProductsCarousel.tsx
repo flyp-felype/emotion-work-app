@@ -120,7 +120,7 @@ export function RedeemableProductsCarousel({
                   >
                     <FontAwesome name="gift" size={10} color="#FFFFFF" />
                     <ThemedText style={styles.badgeText}>
-                      {product.points}
+                      {product.points} pts
                     </ThemedText>
                   </LinearGradient>
 
@@ -227,6 +227,7 @@ const styles = StyleSheet.create({
   cardLeft: {
     flex: 1,
     paddingRight: 12,
+    justifyContent: "center",
   },
   companyName: {
     fontSize: 12,
