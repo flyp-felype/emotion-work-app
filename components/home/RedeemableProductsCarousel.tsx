@@ -49,15 +49,8 @@ export function RedeemableProductsCarousel({
       id: "1",
       name: "Vale-refeição",
       description: "R$ 50,00",
-      points: 100,
-      icon: "cutlery",
-    },
-    {
-      id: "2",
-      name: "Dia de folga",
-      description: "Resgate um dia livre",
       points: 200,
-      icon: "calendar-check-o",
+      icon: "cutlery",
     },
     {
       id: "3",
@@ -68,8 +61,8 @@ export function RedeemableProductsCarousel({
     },
     {
       id: "4",
-      name: "Desconto especial",
-      description: "20% off em parceiros",
+      name: "Desconto ",
+      description: "20% off",
       points: 150,
       icon: "percent",
     },

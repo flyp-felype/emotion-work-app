@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   sectionPrimary: {
     backgroundColor: "#FFFFFF",
