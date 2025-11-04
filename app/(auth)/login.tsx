@@ -15,12 +15,12 @@ export default function LoginScreen() {
   const handleLogin = async (matricula: string, senha: string) => {
     // Aqui você implementará a lógica de autenticação
     console.log("Login:", { matricula, senha });
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/index");
   };
 
   const handleFirstAccess = () => {
     // Navegar para tela de primeiro acesso
-    router.push("/auth/first-access"); // Descomentar esta linha
+    router.push("/(auth)/first-access"); // Descomentar esta linha
   };
 
   return (

@@ -25,7 +25,7 @@ export function ActionButtons({
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
-          <ThemedText style={styles.checkInText}>Fazer Checkin</ThemedText>
+          <ThemedText style={styles.checkInText}>Fazer Check-in</ThemedText>
         </LinearGradient>
       </TouchableOpacity>
       <TouchableOpacity

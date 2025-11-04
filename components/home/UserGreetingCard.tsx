@@ -24,7 +24,7 @@ export function UserGreetingCard({
         <View style={styles.statItem}>
           <FontAwesome
             name="calendar"
-            size={18}
+            size={15}
             color={iconColor}
             style={styles.statIcon}
           />
@@ -35,7 +35,7 @@ export function UserGreetingCard({
         <View style={styles.statItem}>
           <FontAwesome
             name="bar-chart"
-            size={18}
+            size={15}
             color={iconColor}
             style={styles.statIcon}
           />
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 16,
     color: "#000000",
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     marginRight: 3,
   },
   statText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#666666",
   },
 });
