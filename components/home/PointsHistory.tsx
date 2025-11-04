@@ -1,3 +1,5 @@
+import { FontAwesome } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "../themed-text";
@@ -58,11 +60,6 @@ export function PointsHistory({ transactions, onViewAll }: PointsHistoryProps) {
       <View style={styles.listContainer}>
         {mockTransactions.map((transaction) => (
           <View key={transaction.id} style={styles.transactionItem}>
-            <View style={styles.transactionIcon}>
-              <ThemedText style={styles.iconText}>
-                {transaction.type === "earn" ? "➕" : "➖"}
-              </ThemedText>
-            </View>
             <View style={styles.transactionDetails}>
               <ThemedText style={styles.transactionDescription}>
                 {transaction.description}
@@ -71,17 +68,22 @@ export function PointsHistory({ transactions, onViewAll }: PointsHistoryProps) {
                 {transaction.date}
               </ThemedText>
             </View>
-            <ThemedText
-              style={[
-                styles.transactionAmount,
+            <LinearGradient
+              colors={
                 transaction.type === "earn"
-                  ? styles.earnAmount
-                  : styles.redeemAmount,
-              ]}
+                  ? ["#8B5CF6", "#F87171"]
+                  : ["#EF4444", "#F87171"]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.pointsBadge}
             >
-              {transaction.type === "earn" ? "+" : ""}
-              {transaction.amount} pts
-            </ThemedText>
+              <FontAwesome name="gift" size={12} color="#FFFFFF" />
+              <ThemedText style={styles.badgeText}>
+                {transaction.type === "earn" ? "+" : ""}
+                {transaction.amount}
+              </ThemedText>
+            </LinearGradient>
           </View>
         ))}
       </View>
@@ -149,15 +151,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999999",
   },
-  transactionAmount: {
-    fontSize: 16,
+  pointsBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+  },
+  badgeText: {
+    fontSize: 12,
     fontWeight: "600",
-  },
-  earnAmount: {
-    color: "#10B981",
-  },
-  redeemAmount: {
-    color: "#EF4444",
+    color: "#FFFFFF",
   },
   viewAllButton: {
     marginTop: 16,
