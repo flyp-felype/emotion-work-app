@@ -40,7 +40,7 @@ export function UserGreetingCard({
             style={styles.statIcon}
           />
           <ThemedText style={styles.statText}>
-            {accumulatedPoints} pontos acumulados
+            {accumulatedPoints} emotions acumulados
           </ThemedText>
         </View>
       </View>

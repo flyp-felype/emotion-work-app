@@ -126,7 +126,7 @@ export function RedeemableProductsCarousel({
 
                   {!canRedeemProduct && (
                     <ThemedText style={styles.insufficientText}>
-                      Pontos insuficientes
+                      Emotions insuficientes
                     </ThemedText>
                   )}
                 </View>

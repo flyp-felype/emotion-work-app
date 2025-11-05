@@ -33,7 +33,7 @@ export function ActionButtons({
         onPress={onRedeemPoints}
         activeOpacity={0.8}
       >
-        <ThemedText style={styles.redeemText}>Resgatar Pontos</ThemedText>
+        <ThemedText style={styles.redeemText}>Resgatar Emotions</ThemedText>
       </TouchableOpacity>
     </View>
   );
