@@ -16,7 +16,7 @@ export function LoginForm({ onLogin, onFirstAccess }: LoginFormProps) {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    router.replace("/home");
+    router.replace("/(tabs)");
     if (!matricula.trim() || !senha.trim()) {
       Alert.alert("Erro", "Por favor, preencha todos os campos");
       return;

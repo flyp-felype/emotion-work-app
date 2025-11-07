@@ -4,7 +4,7 @@ export default function Index() {
   // Aqui você verificaria se o usuário está autenticado
   // const { isAuthenticated, isLoading } = useAuth();
 
-  const isAuthenticated = true; // Substitua pela sua lógica de auth
+  const isAuthenticated = false; // Substitua pela sua lógica de auth
 
   // if (isLoading) {
   //   return <LoadingScreen />;

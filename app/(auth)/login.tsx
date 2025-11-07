@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -12,10 +12,11 @@ import { LoginHeader } from "../../components/auth/LoginHeader";
 import { ThemedView } from "../../components/themed-view";
 
 export default function LoginScreen() {
+  const router = useRouter();
   const handleLogin = async (matricula: string, senha: string) => {
     // Aqui você implementará a lógica de autenticação
     console.log("Login:", { matricula, senha });
-    router.replace("/(tabs)/index");
+    router.navigate("/(tabs)");
   };
 
   const handleFirstAccess = () => {

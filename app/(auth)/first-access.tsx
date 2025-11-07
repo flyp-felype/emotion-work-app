@@ -23,7 +23,7 @@ export default function FirstAccessScreen() {
     console.log("First Access Data:", data);
 
     // Exemplo: após sucesso, navegar para login ou home
-    // router.replace('/auth/login');
+    router.replace("/(tabs)");
   };
 
   const handleBack = () => {
