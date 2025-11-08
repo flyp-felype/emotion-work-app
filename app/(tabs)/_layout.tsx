@@ -104,6 +104,18 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="settings/lgpd"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="settings/faq"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

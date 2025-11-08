@@ -44,12 +44,12 @@ export default function SettingsScreen() {
   };
 
   const handleLGPD = () => {
-    console.log("Navegar para LGPD");
+    router.push("/(tabs)/settings/lgpd");
     // router.push("/settings/lgpd");
   };
 
   const handleFAQ = () => {
-    console.log("Navegar para Dúvidas Frequentes");
+    router.push("/(tabs)/settings/faq");
     // router.push("/settings/faq");
   };
 
@@ -97,12 +97,6 @@ export default function SettingsScreen() {
       icon: "file-text",
       label: "Extrato",
       onPress: handleStatement,
-    },
-    {
-      id: "notifications",
-      icon: "bell",
-      label: "Notificações",
-      onPress: handleNotifications,
     },
     {
       id: "lgpd",
