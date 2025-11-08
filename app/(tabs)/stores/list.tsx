@@ -400,6 +400,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
+    maxHeight: 80,
+    flex: 1,
   },
   categoriesContent: {
     paddingHorizontal: 20,
@@ -416,8 +418,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
     gap: 6,
-    height: 50,
-    marginBottom: 30,
+    maxHeight: 50,
   },
   categoryChipActive: {
     backgroundColor: "#8B5CF6",
@@ -432,7 +433,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   content: {
-    // flex: 1,
+    flex: 1,
   },
   scrollContent: {
     paddingBottom: 24,
