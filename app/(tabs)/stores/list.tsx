@@ -123,7 +123,7 @@ export default function StoresScreen() {
 
   const handleStorePress = (store: Store) => {
     console.log("Navegar para detalhes da loja:", store.id);
-    // router.push(`/(tabs)/store-details?id=${store.id}`);
+    router.push(`/(tabs)/stores/${store.id}`);
   };
 
   const formatDistance = (distance: number) => {
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   content: {
-    flex: 1,
+    // flex: 1,
   },
   scrollContent: {
     paddingBottom: 24,

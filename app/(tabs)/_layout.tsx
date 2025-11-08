@@ -122,6 +122,18 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="stores/[id]"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="stores/redeem"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
