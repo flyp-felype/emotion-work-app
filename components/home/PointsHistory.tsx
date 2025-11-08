@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "../themed-text";
@@ -14,6 +15,10 @@ interface PointsHistoryProps {
   }[];
   onViewAll: () => void;
 }
+
+export const handleViewAll = () => {
+  router.push("/(tabs)/statement/statement");
+};
 
 export function PointsHistory({ transactions, onViewAll }: PointsHistoryProps) {
   const mockTransactions = [
@@ -87,7 +92,7 @@ export function PointsHistory({ transactions, onViewAll }: PointsHistoryProps) {
           </View>
         ))}
       </View>
-      <TouchableOpacity style={styles.viewAllButton} onPress={onViewAll}>
+      <TouchableOpacity style={styles.viewAllButton} onPress={handleViewAll}>
         <ThemedText style={styles.viewAllText}>Ver Extrato Completo</ThemedText>
       </TouchableOpacity>
     </View>

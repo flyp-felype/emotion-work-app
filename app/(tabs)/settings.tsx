@@ -31,13 +31,11 @@ export default function SettingsScreen() {
   };
 
   const handleMyData = () => {
-    console.log("Navegar para Meus Dados");
-    // router.push("/settings/my-data");
+    router.push("/(tabs)/settings/my-data");
   };
 
   const handleStatement = () => {
-    console.log("Navegar para Extrato");
-    // router.push("/settings/statement");
+    router.push("/(tabs)/statement/statement");
   };
 
   const handleNotifications = () => {

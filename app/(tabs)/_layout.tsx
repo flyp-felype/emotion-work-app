@@ -92,6 +92,18 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="settings/my-data"
+        options={{
+          href: null, // Isso esconde a rota das tabs
+        }}
+      />
+      <Tabs.Screen
+        name="statement/statement"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
