@@ -11,20 +11,20 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLogin, onFirstAccess }: LoginFormProps) {
-  const [matricula, setMatricula] = useState("");
-  const [senha, setSenha] = useState("");
+  const [document, setDocument] = useState("");
+  const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     router.replace("/(tabs)");
-    if (!matricula.trim() || !senha.trim()) {
+    if (!document.trim() || !pass.trim()) {
       Alert.alert("Erro", "Por favor, preencha todos os campos");
       return;
     }
 
     setLoading(true);
     try {
-      await onLogin(matricula.trim(), senha.trim());
+      await onLogin(document.trim(), pass.trim());
     } catch (error) {
       Alert.alert("Erro", "Credenciais inválidas");
     } finally {
@@ -35,18 +35,18 @@ export function LoginForm({ onLogin, onFirstAccess }: LoginFormProps) {
   return (
     <View style={styles.container}>
       <InputField
-        label="Matrícula"
-        placeholder="Digite sua matrícula"
-        value={matricula}
-        onChangeText={setMatricula}
+        label="CPF"
+        placeholder="Digite seu CPF"
+        value={document}
+        onChangeText={setDocument}
         keyboardType="numeric"
       />
 
       <InputField
         label="Senha"
         placeholder="Digite sua senha"
-        value={senha}
-        onChangeText={setSenha}
+        value={pass}
+        onChangeText={setPass}
         secureTextEntry
       />
 

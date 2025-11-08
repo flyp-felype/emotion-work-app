@@ -1,4 +1,3 @@
-import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -6,6 +5,7 @@ import { ThemedText } from "../themed-text";
 
 const logoLight = require("../../assets/images/emotion-work-logo.png");
 const logoDark = require("../../assets/images/emotion-work-logo-dark.png");
+const coinImage = require("../../assets/images/emotions-coin.png");
 
 interface HomeHeaderProps {
   points: number;
@@ -26,13 +26,12 @@ export function HomeHeader({ points = 150 }: HomeHeaderProps) {
           <Image source={logoImage} style={styles.logo} resizeMode="contain" />
         </View>
         <TouchableOpacity style={styles.pointsContainer}>
-          <FontAwesome
-            name="gift"
-            size={20}
-            color="#FFFFFF"
-            style={styles.icon}
+          <ThemedText style={styles.pointsValue}>{points}</ThemedText>
+          <Image
+            source={coinImage}
+            style={styles.coinImage}
+            resizeMode="contain"
           />
-          <ThemedText style={styles.pointsValue}>{points} pts</ThemedText>
         </TouchableOpacity>
       </LinearGradient>
     </View>
@@ -79,8 +78,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   pointsValue: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+    marginRight: 6,
+  },
+  coinImage: {
+    width: 25,
+    height: 25,
+    marginRight: 6,
   },
 });
