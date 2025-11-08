@@ -116,6 +116,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="stores/list"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

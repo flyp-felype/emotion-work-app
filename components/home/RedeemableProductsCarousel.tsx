@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React from "react";
 import {
   Dimensions,
@@ -31,7 +32,9 @@ interface RedeemableProductsCarouselProps {
 export function RedeemableProductsCarousel({
   products = [],
   onRedeem,
-  onViewAll,
+  onViewAll = () => {
+    router.push("/(tabs)/stores/list");
+  },
   userPoints = 150,
 }: RedeemableProductsCarouselProps) {
   // Dados mockados caso não seja passado produtos

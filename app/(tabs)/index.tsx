@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,7 +20,7 @@ export default function HomeScreen() {
   };
 
   const handleViewAllTransactions = () => {
-    console.log("Ver extrato completo");
+    router.push("/(tabs)/statement/statement");
   };
 
   const handleRedeemProduct = (product: any) => {
@@ -27,7 +28,7 @@ export default function HomeScreen() {
   };
 
   const handleViewAllProducts = () => {
-    console.log("Ver todos os produtos");
+    router.push("/(tabs)/stores/list");
   };
 
   return (
