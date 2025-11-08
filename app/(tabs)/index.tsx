@@ -35,11 +35,11 @@ export default function HomeScreen() {
   ];
 
   const handleCheckIn = () => {
-    console.log("Check-in realizado");
+    router.push("/(tabs)/redeem");
   };
 
   const handleRedeemPoints = () => {
-    console.log("Resgatar pontos");
+    router.push("/(tabs)/stores/list");
   };
 
   const handleViewAllTransactions = () => {
@@ -47,7 +47,7 @@ export default function HomeScreen() {
   };
 
   const handleRedeemProduct = (product: any) => {
-    console.log("Resgatar produto:", product);
+    router.push("/(tabs)/stores/redeem");
   };
 
   const handleViewAllProducts = () => {

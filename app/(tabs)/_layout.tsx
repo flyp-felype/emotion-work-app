@@ -29,7 +29,7 @@ function CustomCheckInButton({ children, onPress }: any) {
         <FontAwesome5
           name="check"
           size={20}
-          color={focused ? tintColor : "#FFF"}
+          color={focused ? "#FFF" : "#FFF"}
         />
       </LinearGradient>
       <Text
