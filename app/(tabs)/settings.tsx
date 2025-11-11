@@ -121,7 +121,7 @@ export default function SettingsScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <ThemedText style={styles.headerTitle}>Configurações</ThemedText>
+        {/* <ThemedText style={styles.headerTitle}></ThemedText> */}
       </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

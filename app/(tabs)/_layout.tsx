@@ -86,9 +86,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Configurações",
+          title: "Mais",
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="cog" size={size || 24} color={color} />
+            <FontAwesome name="ellipsis-h" size={size || 24} color={color} />
           ),
         }}
       />
