@@ -36,4 +36,26 @@ api.interceptors.response.use(
   }
 );
 
+export const onboardingService = {
+  checkUser: async (data: {
+    document: string;
+    name: string;
+    birth_date: string;
+    registration: string;
+  }) => {
+    const response = await api.post("/onboarding/check", data);
+    return response.data;
+  },
+
+  completeRegistration: async (data: {
+    user_uuid: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }) => {
+    const response = await api.post("/onboarding/complete", data);
+    return response.data;
+  },
+};
+
 export default api;
