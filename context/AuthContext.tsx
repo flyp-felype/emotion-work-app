@@ -16,6 +16,7 @@ interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
   error: string | null;
+  completeOnboardingSession: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -85,6 +86,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const completeOnboardingSession = async (token: string) => {
+    try {
+      await SecureStore.setItemAsync("user_token", token);
+      // OBS: Como o endpoint 'complete' não retorna o perfil completo (nome, departamento, etc),
+      // idealmente aqui deveríamos chamar um endpoint do tipo /auth/me para pegar os dados.
+      // Por enquanto, vamos apenas salvar o token e deixar o usuário como logado.
+
+      // Se tivermos um endpoint para buscar perfil:
+      // const profile = await api.get('/auth/me');
+      // setUser(profile.data);
+      // await SecureStore.setItemAsync('user_profile', JSON.stringify(profile.data));
+
+      // Solução temporária para permitir o login imediato:
+      // Criamos um perfil "parcial" ou buscamos depois
+      setUser({
+        employee_id: "",
+        name: "Usuário",
+        registration: "",
+        department: "",
+      });
+
+      router.replace("/(tabs)");
+    } catch (error) {
+      console.error("Erro ao salvar sessão de onboarding", error);
+    }
+  };
+
   const signOut = async () => {
     await SecureStore.deleteItemAsync("user_token");
     await SecureStore.deleteItemAsync("user_profile");
@@ -92,7 +120,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, error, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{
+        signIn,
+        signOut,
+        user,
+        isLoading,
+        completeOnboardingSession,
+        error,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
