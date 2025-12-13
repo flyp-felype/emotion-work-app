@@ -7,24 +7,35 @@ import { LoginButton } from "./LoginButton";
 import { StepIndicator } from "./StepIndicator";
 
 interface FirstAccessFormProps {
-  onSubmit: (data: {
+  onCheckUser: (data: {
     cpf: string;
+    name: string;
     matricula: string;
     dataNascimento: Date;
+  }) => Promise<boolean>; // Retorna true se o usuário for encontrado
+  onSubmit: (data: {
+    email: string;
     senha: string;
     confirmarSenha: string;
   }) => Promise<void>;
   onBack: () => void;
 }
 
-export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
+export function FirstAccessForm({
+  onSubmit,
+  onBack,
+  onCheckUser,
+}: FirstAccessFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
   // Dados dos steps
+  const [name, setName] = useState(""); // Novo campo
   const [cpf, setCpf] = useState("");
   const [matricula, setMatricula] = useState("");
   const [dataNascimento, setDataNascimento] = useState<Date | null>(null);
+
+  const [email, setEmail] = useState(""); // Novo campo
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
 
@@ -44,24 +55,16 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
     return numbers.length === 11;
   };
 
-  const validateDate = (date: Date | null) => {
-    if (!date) return false;
-    const today = new Date();
-    const minDate = new Date();
-    minDate.setFullYear(today.getFullYear() - 100); // Máximo 100 anos
-    return date <= today && date >= minDate;
+  const validateEmail = (email: string) => {
+    return /\S+@\S+\.\S+/.test(email);
   };
 
-  const validateMatricula = (matricula: string) => {
-    return matricula.trim().length >= 4;
-  };
-
-  const validatePassword = (password: string) => {
-    return password.length >= 6;
-  };
-
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1) {
+      if (!name.trim()) {
+        Alert.alert("Erro", "Por favor, digite seu nome completo");
+        return;
+      }
       const formattedCPF = cpf.replace(/\D/g, "");
       if (!validateCPF(formattedCPF)) {
         Alert.alert("Erro", "Por favor, digite um CPF válido");
@@ -69,24 +72,39 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
       }
       setCurrentStep(2);
     } else if (currentStep === 2) {
-      if (!validateMatricula(matricula)) {
-        Alert.alert("Erro", "Por favor, digite uma matrícula válida");
+      if (matricula.trim().length < 1) {
+        Alert.alert("Erro", "Por favor, digite sua matrícula");
         return;
       }
       setCurrentStep(3);
     } else if (currentStep === 3) {
-      if (!dataNascimento || !validateDate(dataNascimento)) {
-        Alert.alert(
-          "Erro",
-          "Por favor, selecione uma data de nascimento válida"
-        );
+      if (!dataNascimento) {
+        Alert.alert("Erro", "Por favor, selecione uma data de nascimento");
         return;
       }
-      setCurrentStep(4);
+
+      // AQUI: Executa a verificação na API antes de liberar a criação de senha
+      setLoading(true);
+      try {
+        const isValid = await onCheckUser({
+          cpf,
+          name,
+          matricula,
+          dataNascimento,
+        });
+
+        if (isValid) {
+          setCurrentStep(4);
+        }
+      } catch (e) {
+        // Erro já tratado no pai ou alerta padrão
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleBack = () => {
+  const handleBackStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
@@ -94,38 +112,23 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!validatePassword(senha)) {
+  const handleFinalSubmit = async () => {
+    if (!validateEmail(email)) {
+      Alert.alert("Erro", "Digite um e-mail válido");
+      return;
+    }
+    if (senha.length < 6) {
       Alert.alert("Erro", "A senha deve ter no mínimo 6 caracteres");
       return;
     }
-
     if (senha !== confirmarSenha) {
       Alert.alert("Erro", "As senhas não coincidem");
       return;
     }
 
-    if (!dataNascimento) {
-      Alert.alert("Erro", "Data de nascimento inválida");
-      return;
-    }
-
-    if (!validateMatricula(matricula)) {
-      Alert.alert("Erro", "Matrícula inválida");
-      return;
-    }
-
     setLoading(true);
     try {
-      await onSubmit({
-        cpf: cpf.replace(/\D/g, ""),
-        matricula: matricula.trim(),
-        dataNascimento,
-        senha,
-        confirmarSenha,
-      });
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível criar sua conta. Tente novamente.");
+      await onSubmit({ email, senha, confirmarSenha });
     } finally {
       setLoading(false);
     }
@@ -137,10 +140,14 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
 
       {currentStep === 1 && (
         <View style={styles.stepContent}>
-          <ThemedText style={styles.stepTitle}>CPF do Colaborador</ThemedText>
-          <ThemedText style={styles.stepDescription}>
-            Digite seu CPF para verificar sua identidade
-          </ThemedText>
+          <ThemedText style={styles.stepTitle}>Identificação</ThemedText>
+          <InputField
+            label="Nome Completo"
+            placeholder="Digite seu nome"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+          />
           <InputField
             label="CPF"
             placeholder="000.000.000-00"
@@ -153,9 +160,8 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
 
       {currentStep === 2 && (
         <View style={styles.stepContent}>
-          <ThemedText style={styles.stepTitle}>Número da Matrícula</ThemedText>
-          <ThemedText style={styles.stepDescription}>
-            Digite seu número de matrícula
+          <ThemedText style={styles.stepTitle}>
+            Vínculo com a Empresa
           </ThemedText>
           <InputField
             label="Matrícula"
@@ -170,9 +176,6 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
       {currentStep === 3 && (
         <View style={styles.stepContent}>
           <ThemedText style={styles.stepTitle}>Data de Nascimento</ThemedText>
-          <ThemedText style={styles.stepDescription}>
-            Informe sua data de nascimento
-          </ThemedText>
           <DatePickerInput
             label="Data de Nascimento"
             placeholder="DD/MM/AAAA"
@@ -185,20 +188,25 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
 
       {currentStep === 4 && (
         <View style={styles.stepContent}>
-          <ThemedText style={styles.stepTitle}>Criar Senha</ThemedText>
-          <ThemedText style={styles.stepDescription}>
-            Defina uma senha segura para sua conta
-          </ThemedText>
+          <ThemedText style={styles.stepTitle}>Finalizar Cadastro</ThemedText>
           <InputField
-            label="Senha"
-            placeholder="Digite sua senha"
+            label="Seu melhor E-mail"
+            placeholder="exemplo@email.com"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <InputField
+            label="Crie uma Senha"
+            placeholder="Mínimo 6 caracteres"
             value={senha}
             onChangeText={setSenha}
             secureTextEntry
           />
           <InputField
-            label="Confirmar Senha"
-            placeholder="Digite novamente sua senha"
+            label="Confirme a Senha"
+            placeholder="Repita a senha"
             value={confirmarSenha}
             onChangeText={setConfirmarSenha}
             secureTextEntry
@@ -210,28 +218,31 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
         {currentStep < 4 ? (
           <>
             <LoginButton
-              title="Continuar"
+              title={loading ? "Verificando..." : "Continuar"}
               onPress={handleNext}
               variant="primary"
+              disabled={loading}
+              loading={loading}
             />
             <LoginButton
               title="Voltar"
-              onPress={handleBack}
+              onPress={handleBackStep}
               variant="secondary"
+              disabled={loading}
             />
           </>
         ) : (
           <>
             <LoginButton
-              title="Finalizar"
-              onPress={handleSubmit}
+              title="Finalizar Cadastro"
+              onPress={handleFinalSubmit}
               loading={loading}
               disabled={loading}
               variant="primary"
             />
             <LoginButton
               title="Voltar"
-              onPress={handleBack}
+              onPress={handleBackStep}
               variant="secondary"
               disabled={loading}
             />
@@ -241,27 +252,15 @@ export function FirstAccessForm({ onSubmit, onBack }: FirstAccessFormProps) {
     </View>
   );
 }
-
+// styles...
 const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-  },
-  stepContent: {
-    marginBottom: 32,
-  },
+  container: { width: "100%" },
+  stepContent: { marginBottom: 32 },
   stepTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 16,
     textAlign: "center",
   },
-  stepDescription: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  buttonContainer: {
-    marginTop: 20,
-  },
+  buttonContainer: { marginTop: 20 },
 });
