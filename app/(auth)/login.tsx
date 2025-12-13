@@ -1,6 +1,8 @@
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,10 +15,21 @@ import { ThemedView } from "../../components/themed-view";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { signIn } = useAuth();
+  const [loading, setLoading] = useState(false);
+
   const handleLogin = async (matricula: string, senha: string) => {
-    // Aqui você implementará a lógica de autenticação
-    console.log("Login:", { matricula, senha });
-    router.navigate("/(tabs)");
+    try {
+      setLoading(true);
+      await signIn(matricula, senha);
+    } catch (error: any) {
+      Alert.alert(
+        "Erro no Login",
+        "Verifique sua matrícula e senha e tente novamente."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFirstAccess = () => {
