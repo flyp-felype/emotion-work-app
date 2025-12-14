@@ -76,6 +76,32 @@ export function FirstAccessForm({
         Alert.alert("Erro", "Por favor, digite sua matrícula");
         return;
       }
+
+      const hasUpperCase = /[A-Z]/.test(senha);
+      if (!hasUpperCase) {
+        Alert.alert(
+          "Senha Fraca",
+          "A senha precisa conter pelo menos uma letra maiúscula (ex: A, B, C)."
+        );
+        return;
+      }
+
+      if (senha !== confirmarSenha) {
+        Alert.alert("Erro", "As senhas não coincidem");
+        return;
+      }
+
+      // Validação Alfanumérica (apenas letras e números)
+      const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(matricula);
+
+      if (!isAlphanumeric) {
+        Alert.alert(
+          "Erro",
+          "A matrícula deve conter apenas letras e números, sem espaços ou caracteres especiais."
+        );
+        return;
+      }
+
       setCurrentStep(3);
     } else if (currentStep === 3) {
       if (!dataNascimento) {
@@ -140,20 +166,17 @@ export function FirstAccessForm({
 
       {currentStep === 1 && (
         <View style={styles.stepContent}>
-          <ThemedText style={styles.stepTitle}>Identificação</ThemedText>
+          <ThemedText style={styles.stepTitle}>
+            Vínculo com a Empresa
+          </ThemedText>
           <InputField
-            label="Nome Completo"
-            placeholder="Digite seu nome"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
-          <InputField
-            label="CPF"
-            placeholder="000.000.000-00"
-            value={cpf}
-            onChangeText={(text) => setCpf(formatCPF(text))}
-            keyboardType="numeric"
+            label="Matrícula"
+            placeholder="Digite sua matrícula"
+            value={matricula}
+            onChangeText={setMatricula}
+            // REMOVA ou MUDE o keyboardType para "default"
+            // keyboardType="numeric" <--- REMOVER ISSO
+            autoCapitalize="characters" // Sugestão: Forçar maiúsculas visualmente
           />
         </View>
       )}
