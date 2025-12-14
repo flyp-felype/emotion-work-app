@@ -1,4 +1,4 @@
-import { useRouter, useSegments } from "expo-router";
+import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../services/api";
@@ -27,10 +27,11 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Correção 1: Iniciar como true
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const segments = useSegments();
+  const rootNavigationState = useRootNavigationState(); // Correção 2: Hook para verificar estado da navegação
 
   // Verificar se existe usuário logado ao iniciar o app
   useEffect(() => {
@@ -56,6 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
 
+    // Correção 2: Só navega se o sistema de navegação estiver pronto
+    if (!rootNavigationState?.key) return;
+
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!user && !inAuthGroup) {
@@ -63,18 +67,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else if (user && inAuthGroup) {
       router.replace("/(tabs)");
     }
-  }, [user, isLoading, segments]);
+  }, [user, isLoading, segments, rootNavigationState]);
 
   const signIn = async (matricula: string, senha: string) => {
     try {
+      // Inicia loading para evitar conflito com o useEffect de proteção
+      setIsLoading(true);
+
       const response = await api.post("/auth/employee/login", {
         registration: matricula,
         password: senha,
       });
 
-      const { acces_token, profile } = response.data;
+      // Correção 3: Corrigido typo 'acces_token' -> 'access_token'
+      const { access_token, profile } = response.data;
 
-      await SecureStore.setItemAsync("user_token", acces_token);
+      await SecureStore.setItemAsync("user_token", access_token);
       await SecureStore.setItemAsync("user_profile", JSON.stringify(profile));
 
       setUser(profile);
@@ -89,17 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const completeOnboardingSession = async (token: string) => {
     try {
       await SecureStore.setItemAsync("user_token", token);
-      // OBS: Como o endpoint 'complete' não retorna o perfil completo (nome, departamento, etc),
-      // idealmente aqui deveríamos chamar um endpoint do tipo /auth/me para pegar os dados.
-      // Por enquanto, vamos apenas salvar o token e deixar o usuário como logado.
 
-      // Se tivermos um endpoint para buscar perfil:
-      // const profile = await api.get('/auth/me');
-      // setUser(profile.data);
-      // await SecureStore.setItemAsync('user_profile', JSON.stringify(profile.data));
-
-      // Solução temporária para permitir o login imediato:
-      // Criamos um perfil "parcial" ou buscamos depois
       setUser({
         employee_id: "",
         name: "Usuário",
@@ -107,6 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         department: "",
       });
 
+      // O useEffect de proteção fará o redirecionamento automaticamente
+      // mas podemos forçar aqui se necessário
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Erro ao salvar sessão de onboarding", error);
