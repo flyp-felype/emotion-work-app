@@ -68,14 +68,6 @@ export default function FirstAccessScreen() {
     }
 
     try {
-      console.log("data", data);
-      console.log("userUuid", userUuid);
-      console.log("Data COmplete ", {
-        user_uuid: userUuid,
-        email: data.email,
-        password: data.senha,
-        password_confirmation: data.confirmarSenha,
-      });
       const response = await onboardingService.completeRegistration({
         user_uuid: userUuid,
         email: data.email,
