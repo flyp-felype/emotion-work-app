@@ -36,7 +36,7 @@ export function InputField({
         ]}
       >
         <TextInput
-          style={[styles.input, { color: textColor }]}
+          style={[styles.input]}
           placeholder={placeholder}
           placeholderTextColor="#999"
           value={value}
