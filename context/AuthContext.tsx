@@ -71,20 +71,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (matricula: string, senha: string) => {
     try {
-      // Inicia loading para evitar conflito com o useEffect de proteção
       setIsLoading(true);
-
+  
       const response = await api.post("/auth/employee/login", {
         registration: matricula,
         password: senha,
       });
-
-      // Correção 3: Corrigido typo 'acces_token' -> 'access_token'
-      const { access_token, profile } = response.data;
-
+  
+      // backend deve retornar também 'refresh_token'
+      const { access_token, refresh_token, profile } = response.data;
+  
       await SecureStore.setItemAsync("user_token", access_token);
+      await SecureStore.setItemAsync("refresh_token", refresh_token);
       await SecureStore.setItemAsync("user_profile", JSON.stringify(profile));
-
+  
       setUser(profile);
     } catch (error) {
       console.error("Erro ao fazer login", error);
@@ -113,11 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signOut = async () => {
-    await SecureStore.deleteItemAsync("user_token");
-    await SecureStore.deleteItemAsync("user_profile");
-    setUser(null);
-  };
+const signOut = async () => {
+  await SecureStore.deleteItemAsync("user_token");
+  await SecureStore.deleteItemAsync("refresh_token"); // novo
+  await SecureStore.deleteItemAsync("user_profile");
+  setUser(null);
+};
 
   return (
     <AuthContext.Provider
