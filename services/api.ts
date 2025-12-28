@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
@@ -8,7 +8,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-  async (config: AxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
     const token = await SecureStore.getItemAsync("user_token");
 
     if (token) {
@@ -64,6 +64,13 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const authService = {
+  login: async (data: { document: string; password: string }) => {
+    const response = await api.post("/auth/employee/login", data);
+    return response.data;
+  },
+};
 
 export const onboardingService = {
   checkUser: async (data: {

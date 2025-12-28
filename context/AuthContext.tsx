@@ -1,7 +1,7 @@
 import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { createContext, useContext, useEffect, useState } from "react";
-import api from "../services/api";
+import { authService } from "../services/api";
 
 type UserProfile = {
   employee_id: string;
@@ -11,7 +11,7 @@ type UserProfile = {
 };
 
 interface AuthContextType {
-  signIn: (matricula: string, senha: string) => Promise<void>;
+  signIn: (document: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   user: UserProfile | null;
   isLoading: boolean;
@@ -69,17 +69,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, isLoading, segments, rootNavigationState]);
 
-  const signIn = async (matricula: string, senha: string) => {
+  const signIn = async (document: string, password: string) => {
     try {
       setIsLoading(true);
+      setError(null);
   
-      const response = await api.post("/auth/employee/login", {
-        registration: matricula,
-        password: senha,
+      const response = await authService.login({
+        document,
+        password,
       });
   
-      // backend deve retornar também 'refresh_token'
-      const { access_token, refresh_token, profile } = response.data;
+      // backend retorna: access_token, refresh_token, token_type, user_type, profile
+      const { access_token, refresh_token, profile } = response;
   
       await SecureStore.setItemAsync("user_token", access_token);
       await SecureStore.setItemAsync("refresh_token", refresh_token);
@@ -88,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(profile);
     } catch (error) {
       console.error("Erro ao fazer login", error);
+      setError("Credenciais inválidas");
       throw error;
     } finally {
       setIsLoading(false);

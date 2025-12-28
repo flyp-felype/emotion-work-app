@@ -18,14 +18,14 @@ export default function LoginScreen() {
   const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (matricula: string, senha: string) => {
+  const handleLogin = async (document: string, password: string) => {
     try {
       setLoading(true);
-      await signIn(matricula, senha);
+      await signIn(document, password);
     } catch (error: any) {
       Alert.alert(
         "Erro no Login",
-        "Verifique sua matrícula e senha e tente novamente."
+        "Verifique seu CPF e senha e tente novamente."
       );
     } finally {
       setLoading(false);
