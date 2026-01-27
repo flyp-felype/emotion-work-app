@@ -64,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user && !inAuthGroup) {
       router.replace("/(auth)/login");
     } else if (user && inAuthGroup) {
+      console.log("Entrou no else if");
       router.replace("/(tabs)");
     }
   }, [user, isLoading, segments, rootNavigationState]);
@@ -89,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Erro ao fazer login", error);
       throw error;
     } finally {
+      setUser(null)
       setIsLoading(false);
     }
   };
