@@ -35,7 +35,12 @@ export default function FirstAccessScreen() {
         registration: data.matricula,
         birth_date: formattedDate,
       });
-
+      console.log("response", ({
+        document: data.cpf.replace(/\D/g, ""),
+        name: data.name,
+        registration: data.matricula,
+        birth_date: formattedDate,
+      }));
       if (response.found && response.user_uuid) {
         setUserUuid(response.user_uuid);
         return true;
@@ -81,6 +86,15 @@ export default function FirstAccessScreen() {
       }
     } catch (error: any) {
       console.error(error);
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+      if (status === 400 && detail === "User already exists") {
+        Alert.alert(
+          "Usuário já cadastrado",
+          "Já existe um cadastro para este usuário. Procure sua empresa para mais informações."
+        );
+        return;
+      }
       const msg =
         error.response?.data?.message || "Erro ao finalizar cadastro.";
       Alert.alert("Erro", msg);

@@ -10,6 +10,7 @@ interface InputFieldProps {
   onChangeText: (text: string) => void;
   secureTextEntry?: boolean;
   keyboardType?: "default" | "numeric" | "email-address";
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
 }
 
 export function InputField({
@@ -19,6 +20,7 @@ export function InputField({
   onChangeText,
   secureTextEntry = false,
   keyboardType = "default",
+  autoCapitalize = "sentences",
 }: InputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -45,6 +47,7 @@ export function InputField({
           onBlur={() => setIsFocused(false)}
           secureTextEntry={secureTextEntry && !showPassword}
           keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
         />
         {secureTextEntry && (
           <TouchableOpacity

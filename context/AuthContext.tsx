@@ -61,7 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!rootNavigationState?.key) return;
 
     const inAuthGroup = segments[0] === "(auth)";
-
     if (!user && !inAuthGroup) {
       router.replace("/(auth)/login");
     } else if (user && inAuthGroup) {
@@ -113,12 +112,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-const signOut = async () => {
-  await SecureStore.deleteItemAsync("user_token");
-  await SecureStore.deleteItemAsync("refresh_token"); // novo
-  await SecureStore.deleteItemAsync("user_profile");
-  setUser(null);
-};
+  const signOut = async () => {
+    await SecureStore.deleteItemAsync("user_token");
+    await SecureStore.deleteItemAsync("refresh_token"); // novo
+    await SecureStore.deleteItemAsync("user_profile");
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider

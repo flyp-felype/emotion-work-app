@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "../../components/themed-text";
+import { useAuth } from "../../context/AuthContext";
 
 const coinImage = require("../../assets/images/emotions-coin.png");
 
@@ -23,6 +24,7 @@ interface MenuItem {
 }
 
 export default function SettingsScreen() {
+  const { signOut } = useAuth();
   const userData = {
     name: "João Silva",
     email: "joao.silva@empresa.com",
@@ -59,8 +61,8 @@ export default function SettingsScreen() {
       {
         text: "Sair",
         style: "destructive",
-        onPress: () => {
-          console.log("Logout");
+        onPress: async () => {
+          await signOut();
           router.replace("/(auth)/login");
         },
       },

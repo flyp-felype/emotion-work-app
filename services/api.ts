@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "https://emotion-api-production-40d4.up.railway.app",
+  baseURL: "http://65.108.151.196:8000",
   timeout: 10000,
 });
 
