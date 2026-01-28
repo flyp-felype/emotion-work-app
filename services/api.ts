@@ -87,4 +87,56 @@ export const onboardingService = {
   },
 };
 
+export type MeTransaction = {
+  id: string;
+  type: "earn" | "redeem";
+  amount: number;
+  description: string;
+  created_at: string;
+};
+
+export type MeResponse = {
+  user: {
+    id: number;
+    uuid: string;
+    email: string;
+    role: {
+      id: number;
+      name: string;
+      description: string;
+      is_active: boolean;
+    };
+    company_id: number;
+    is_active: boolean;
+    created_at: string;
+  };
+  employee: {
+    id: number;
+    uuid: string;
+    company_id: number;
+    user_id: number;
+    name: string;
+    registration: string;
+    department: string;
+    phone: string;
+    is_active: boolean;
+    termination_date: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  manager: {
+    id: number;
+    uuid: string;
+    name: string;
+    email: string;
+  } | null;
+  transactions: MeTransaction[];
+  balance: number;
+};
+
+export const getMe = async (): Promise<MeResponse> => {
+  const response = await api.get("/me");
+  return response.data;
+};
+
 export default api;

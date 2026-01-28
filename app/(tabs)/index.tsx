@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionButtons } from "../../components/home/ActionButtons";
@@ -10,7 +10,31 @@ import { HomeHeader } from "../../components/home/HomeHeader";
 import { PointsHistory } from "../../components/home/PointsHistory";
 import { RedeemableProductsCarousel } from "../../components/home/RedeemableProductsCarousel";
 import { UserGreetingCard } from "../../components/home/UserGreetingCard";
+import { getMe, MeResponse } from "../../services/api";
 export default function HomeScreen() {
+  const [meData, setMeData] = useState<MeResponse | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadMe = async () => {
+      try {
+        const response = await getMe();
+        if (isMounted) {
+          setMeData(response);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar /me", error);
+      }
+    };
+
+    loadMe();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const activeCoupons = [
     {
       id: "redeem-1",
@@ -54,6 +78,21 @@ export default function HomeScreen() {
     router.push("/(tabs)/stores/list");
   };
 
+  const formattedTransactions =
+    meData?.transactions.map((transaction) => ({
+      id: transaction.id,
+      type: transaction.type,
+      amount: transaction.amount,
+      description: transaction.description,
+      date: new Date(transaction.created_at).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    })) ?? [];
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <LinearGradient colors={["#F8F9FA", "#FFFFFF"]} style={styles.gradient}>
@@ -62,13 +101,13 @@ export default function HomeScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <HomeHeader points={150} />
+          <HomeHeader points={meData?.balance ?? 0} />
 
           <View style={[styles.section, styles.sectionSecondary]}>
             <UserGreetingCard
-              name="João Silva"
-              consecutiveDays={5}
-              accumulatedPoints={150}
+              name={meData?.employee.name ?? "Funcionário"}
+              consecutiveDays={0}
+              accumulatedPoints={0}
             />
           </View>
 
@@ -94,7 +133,7 @@ export default function HomeScreen() {
 
           <View style={styles.section}>
             <PointsHistory
-              transactions={[]}
+              transactions={formattedTransactions}
               onViewAll={handleViewAllTransactions}
             />
           </View>

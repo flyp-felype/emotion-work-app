@@ -63,8 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const inAuthGroup = segments[0] === "(auth)";
     if (!user && !inAuthGroup) {
       router.replace("/(auth)/login");
-    } else if (user && inAuthGroup) {
-      console.log("Entrou no else if");
+    } else if (user && inAuthGroup) { 
       router.replace("/(tabs)");
     }
   }, [user, isLoading, segments, rootNavigationState]);
