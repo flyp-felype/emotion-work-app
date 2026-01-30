@@ -1,6 +1,5 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "../themed-text";
@@ -16,83 +15,47 @@ interface PointsHistoryProps {
   onViewAll: () => void;
 }
 
-export const handleViewAll = () => {
-  router.push("/(tabs)/statement/statement");
-};
-
 export function PointsHistory({ transactions, onViewAll }: PointsHistoryProps) {
-  const mockTransactions = [
-    {
-      id: "1",
-      type: "earn",
-      amount: 50,
-      description: "Checkin realizado",
-      date: "Hoje, 09:00",
-    },
-    {
-      id: "2",
-      type: "earn",
-      amount: 50,
-      description: "Checkin realizado",
-      date: "Ontem, 08:30",
-    },
-    {
-      id: "3",
-      type: "redeem",
-      amount: -30,
-      description: "Prêmio resgatado",
-      date: "15/01/2025, 14:00",
-    },
-    {
-      id: "4",
-      type: "earn",
-      amount: 50,
-      description: "Checkin realizado",
-      date: "14/01/2025, 08:15",
-    },
-    {
-      id: "5",
-      type: "earn",
-      amount: 50,
-      description: "Checkin realizado",
-      date: "13/01/2025, 08:00",
-    },
-  ];
-
   return (
     <View style={styles.container}>
       <ThemedText style={styles.title}>Últimas Movimentações</ThemedText>
-      <View style={styles.listContainer}>
-        {mockTransactions.map((transaction) => (
-          <View key={transaction.id} style={styles.transactionItem}>
-            <View style={styles.transactionDetails}>
-              <ThemedText style={styles.transactionDescription}>
-                {transaction.description}
-              </ThemedText>
-              <ThemedText style={styles.transactionDate}>
-                {transaction.date}
-              </ThemedText>
+      {transactions.length === 0 ? (
+        <ThemedText style={styles.emptyText}>
+          Nenhuma movimentação recente
+        </ThemedText>
+      ) : (
+        <View style={styles.listContainer}>
+          {transactions.map((transaction) => (
+            <View key={transaction.id} style={styles.transactionItem}>
+              <View style={styles.transactionDetails}>
+                <ThemedText style={styles.transactionDescription}>
+                  {transaction.description}
+                </ThemedText>
+                <ThemedText style={styles.transactionDate}>
+                  {transaction.date}
+                </ThemedText>
+              </View>
+              <LinearGradient
+                colors={
+                  transaction.type === "earn"
+                    ? ["#8B5CF6", "#F87171"]
+                    : ["#EF4444", "#F87171"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.pointsBadge}
+              >
+                <FontAwesome name="gift" size={12} color="#FFFFFF" />
+                <ThemedText style={styles.badgeText}>
+                  {transaction.type === "earn" ? "+" : ""}
+                  {transaction.amount}
+                </ThemedText>
+              </LinearGradient>
             </View>
-            <LinearGradient
-              colors={
-                transaction.type === "earn"
-                  ? ["#8B5CF6", "#F87171"]
-                  : ["#EF4444", "#F87171"]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.pointsBadge}
-            >
-              <FontAwesome name="gift" size={12} color="#FFFFFF" />
-              <ThemedText style={styles.badgeText}>
-                {transaction.type === "earn" ? "+" : ""}
-                {transaction.amount}
-              </ThemedText>
-            </LinearGradient>
-          </View>
-        ))}
-      </View>
-      <TouchableOpacity style={styles.viewAllButton} onPress={handleViewAll}>
+          ))}
+        </View>
+      )}
+      <TouchableOpacity style={styles.viewAllButton} onPress={onViewAll}>
         <ThemedText style={styles.viewAllText}>Ver Extrato Completo</ThemedText>
       </TouchableOpacity>
     </View>
@@ -123,6 +86,11 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     gap: 12,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#999999",
+    paddingVertical: 12,
   },
   transactionItem: {
     flexDirection: "row",
