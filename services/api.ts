@@ -171,7 +171,29 @@ export interface PartnerCompany {
     name: string;
     icon: string;
   };
+  cnpj: string;
+  address: string;
+  phone: string;
+  business_hours: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
+
+export interface PartnerCompaniesResponse {
+  total: number;
+  companies: PartnerCompany[];
+}
+
+export const getPartnerCompanies = async (
+  activeOnly: boolean = true
+): Promise<PartnerCompaniesResponse> => {
+  const response = await api.get("/partner-companies", {
+    params: { active_only: activeOnly },
+  });
+  return response.data;
+};
 
 export interface Promotion {
   uuid: string;

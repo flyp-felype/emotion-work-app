@@ -11,18 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "../../../components/themed-text";
-import { getPartnerCategories, PartnerCategory } from "../../../services/api";
-
-interface Store {
-  id: string;
-  name: string;
-  category: string;
-  distance: number; // em km
-  logo?: string;
-  icon?: string;
-  address: string;
-  featured?: boolean;
-}
+import { getPartnerCategories, getPartnerCompanies, PartnerCategory, PartnerCompany } from "../../../services/api";
 
 type CategoryId = number | "all";
 
@@ -38,125 +27,63 @@ export default function StoresScreen() {
   const [categories, setCategories] = useState<CategoryDisplay[]>([
     { id: "all", label: "Todas", icon: "grid-view" },
   ]);
+  const [companies, setCompanies] = useState<PartnerCompany[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchCategories();
+    fetchData();
   }, []);
 
-  const fetchCategories = async () => {
+  const fetchData = async () => {
     try {
-      const response = await getPartnerCategories();
-      const formattedCategories = response.categories.map((cat: PartnerCategory) => ({
-        id: cat.id,
-        label: cat.name,
-        icon: cat.icon,
-      }));
+      setIsLoading(true);
+      const [categoriesResponse, companiesResponse] = await Promise.all([
+        getPartnerCategories(),
+        getPartnerCompanies(),
+      ]);
+
+      const formattedCategories = categoriesResponse.categories.map(
+        (cat: PartnerCategory) => ({
+          id: cat.id,
+          label: cat.name,
+          icon: cat.icon,
+        })
+      );
       setCategories([
         { id: "all", label: "Todas", icon: "grid-view" },
         ...formattedCategories,
       ]);
+
+      setCompanies(companiesResponse.companies);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Mock de lojas
-  const stores: Store[] = [
-    {
-      id: "1",
-      name: "Starbucks Centro",
-      category: "food",
-      distance: 0.5,
-      icon: "coffee",
-      address: "Av. Paulista, 1000",
-      featured: true,
-    },
-    {
-      id: "2",
-      name: "iFood",
-      category: "food",
-      distance: 0.0, // Online
-      icon: "cutlery",
-      address: "Delivery Online",
-      featured: true,
-    },
-    {
-      id: "3",
-      name: "Café do Ponto",
-      category: "food",
-      distance: 1.2,
-      icon: "coffee",
-      address: "Rua Augusta, 250",
-    },
-    {
-      id: "4",
-      name: "Amazon",
-      category: "retail",
-      distance: 0.0,
-      icon: "shopping-cart",
-      address: "Loja Online",
-    },
-    {
-      id: "5",
-      name: "Livraria Cultura",
-      category: "retail",
-      distance: 2.5,
-      icon: "book",
-      address: "Shopping Iguatemi",
-    },
-    {
-      id: "6",
-      name: "Spa Wellness",
-      category: "wellness",
-      distance: 3.0,
-      icon: "heart",
-      address: "Rua dos Pinheiros, 850",
-    },
-    {
-      id: "7",
-      name: "Academia SmartFit",
-      category: "wellness",
-      distance: 0.8,
-      icon: "heartbeat",
-      address: "Rua Consolação, 500",
-    },
-    {
-      id: "8",
-      name: "Cabeleireiro Elegance",
-      category: "services",
-      distance: 1.5,
-      icon: "cut",
-      address: "Rua Oscar Freire, 120",
-    },
-  ];
-
   // Filtrar lojas
-  const filteredStores = stores.filter((store) => {
-    const matchesSearch = store.name
+  const filteredCompanies = companies.filter((company) => {
+    const matchesSearch = company.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
 
-    // Note: This logic might need adjustment when stores also come from API
-    // Currently mock stores use string categories, but API uses numbers
-    const matchesCategory = selectedCategory === "all";
+    const matchesCategory =
+      selectedCategory === "all" ||
+      company.category.uuid === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
 
   // Separar lojas em destaque e normais
-  const featuredStores = filteredStores.filter((store) => store.featured);
-  const regularStores = filteredStores.filter((store) => !store.featured);
+  const featuredCompanies = filteredCompanies.filter((company) => company.featured);
+  const regularCompanies = filteredCompanies.filter((company) => !company.featured);
 
-  const handleStorePress = (store: Store) => {
-    // console.log("Navegar para detalhes da loja:", store.id);
-    router.push(`/(tabs)/stores/${store.id}`);
+  const handleStorePress = (company: PartnerCompany) => {
+    router.push(`/(tabs)/stores/${company.uuid}`);
   };
 
-  const formatDistance = (distance: number) => {
-    if (distance === 0) return "Online";
-    if (distance < 1) return `${(distance * 1000).toFixed(0)}m`;
-    return `${distance.toFixed(1)}km`;
-  };
+
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -236,122 +163,47 @@ export default function StoresScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Featured Stores */}
-        {featuredStores.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <FontAwesome name="star" size={18} color="#F59E0B" />
-              <ThemedText style={styles.sectionTitle}>Em Destaque</ThemedText>
-            </View>
-
-            {featuredStores.map((store) => (
-              <TouchableOpacity
-                key={store.id}
-                style={styles.featuredCard}
-                onPress={() => handleStorePress(store)}
-                activeOpacity={0.7}
-              >
-                <LinearGradient
-                  colors={["#8B5CF6", "#F87171"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.featuredGradient}
-                ></LinearGradient>
-
-                <View style={styles.featuredContent}>
-                  <View style={styles.featuredLeft}>
-                    <View style={styles.featuredIconContainer}>
-                      <FontAwesome
-                        name={store.icon as any}
-                        size={32}
-                        color="#8B5CF6"
-                      />
-                    </View>
-                    <View style={styles.featuredInfo}>
-                      <ThemedText style={styles.featuredName}>
-                        {store.name}
-                      </ThemedText>
-                      <View style={styles.featuredMeta}>
-                        <FontAwesome
-                          name="map-marker"
-                          size={12}
-                          color="#666666"
-                        />
-                        <ThemedText style={styles.featuredAddress}>
-                          {store.address}
-                        </ThemedText>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.distanceBadge}>
-                    <FontAwesome
-                      name="location-arrow"
-                      size={10}
-                      color="#8B5CF6"
-                    />
-                    <ThemedText style={styles.distanceText}>
-                      {formatDistance(store.distance)}
-                    </ThemedText>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+        {/* Companies List */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MaterialIcons name="store" size={18} color="#8B5CF6" />
+            <ThemedText style={styles.sectionTitle}>
+              Nossas Lojas ({filteredCompanies.length})
+            </ThemedText>
           </View>
-        )}
 
-        {/* Regular Stores */}
-        {regularStores.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <FontAwesome name="map-marker" size={18} color="#8B5CF6" />
-              <ThemedText style={styles.sectionTitle}>
-                Próximas de Você ({regularStores.length})
-              </ThemedText>
-            </View>
-
-            {regularStores.map((store) => (
-              <TouchableOpacity
-                key={store.id}
-                style={styles.storeCard}
-                onPress={() => handleStorePress(store)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.storeIconContainer}>
-                  <FontAwesome
-                    name={store.icon as any}
-                    size={24}
-                    color="#8B5CF6"
-                  />
+          {filteredCompanies.map((company) => (
+            <TouchableOpacity
+              key={company.uuid}
+              style={styles.storeCard}
+              onPress={() => handleStorePress(company)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.storeIconContainer}>
+                <MaterialIcons
+                  name={company.category.icon as any}
+                  size={24}
+                  color="#8B5CF6"
+                />
+              </View>
+              <View style={styles.storeInfo}>
+                <ThemedText style={styles.storeName}>{company.name}</ThemedText>
+                <View style={styles.storeMeta}>
+                  <FontAwesome name="map-marker" size={12} color="#666666" />
+                  <ThemedText style={styles.storeAddress}>
+                    {company.address}
+                  </ThemedText>
                 </View>
-                <View style={styles.storeInfo}>
-                  <ThemedText style={styles.storeName}>{store.name}</ThemedText>
-                  <View style={styles.storeMeta}>
-                    <FontAwesome name="map-marker" size={12} color="#666666" />
-                    <ThemedText style={styles.storeAddress}>
-                      {store.address}
-                    </ThemedText>
-                  </View>
-                </View>
-                <View style={styles.storeRight}>
-                  <View style={styles.distanceBadgeSmall}>
-                    <FontAwesome
-                      name="location-arrow"
-                      size={10}
-                      color="#8B5CF6"
-                    />
-                    <ThemedText style={styles.distanceTextSmall}>
-                      {formatDistance(store.distance)}
-                    </ThemedText>
-                  </View>
-                  <FontAwesome name="chevron-right" size={16} color="#999999" />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+              </View>
+              <View style={styles.storeRight}>
+                <FontAwesome name="chevron-right" size={16} color="#999999" />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* Empty State */}
-        {filteredStores.length === 0 && (
+        {filteredCompanies.length === 0 && (
           <View style={styles.emptyState}>
             <MaterialIcons name="store" size={64} color="#CCCCCC" />
             <ThemedText style={styles.emptyTitle}>
