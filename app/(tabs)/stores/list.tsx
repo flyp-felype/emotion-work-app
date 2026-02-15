@@ -1,7 +1,7 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "../../../components/themed-text";
+import { getPartnerCategories, PartnerCategory } from "../../../services/api";
 
 interface Store {
   id: string;
@@ -23,11 +24,41 @@ interface Store {
   featured?: boolean;
 }
 
-type CategoryType = "all" | "food" | "retail" | "services" | "wellness";
+type CategoryId = number | "all";
+
+interface CategoryDisplay {
+  id: CategoryId;
+  label: string;
+  icon: string;
+}
 
 export default function StoresScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType>("all");
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>("all");
+  const [categories, setCategories] = useState<CategoryDisplay[]>([
+    { id: "all", label: "Todas", icon: "grid-view" },
+  ]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await getPartnerCategories();
+      const formattedCategories = response.categories.map((cat: PartnerCategory) => ({
+        id: cat.id,
+        label: cat.name,
+        icon: cat.icon,
+      }));
+      setCategories([
+        { id: "all", label: "Todas", icon: "grid-view" },
+        ...formattedCategories,
+      ]);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   // Mock de lojas
   const stores: Store[] = [
@@ -99,21 +130,16 @@ export default function StoresScreen() {
     },
   ];
 
-  const categories = [
-    { id: "all" as CategoryType, label: "Todas", icon: "th" },
-    { id: "food" as CategoryType, label: "Alimentação", icon: "cutlery" },
-    { id: "retail" as CategoryType, label: "Varejo", icon: "shopping-bag" },
-    { id: "services" as CategoryType, label: "Serviços", icon: "briefcase" },
-    { id: "wellness" as CategoryType, label: "Bem-estar", icon: "heart" },
-  ];
-
   // Filtrar lojas
   const filteredStores = stores.filter((store) => {
     const matchesSearch = store.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || store.category === selectedCategory;
+
+    // Note: This logic might need adjustment when stores also come from API
+    // Currently mock stores use string categories, but API uses numbers
+    const matchesCategory = selectedCategory === "all";
+
     return matchesSearch && matchesCategory;
   });
 
@@ -122,7 +148,7 @@ export default function StoresScreen() {
   const regularStores = filteredStores.filter((store) => !store.featured);
 
   const handleStorePress = (store: Store) => {
-    console.log("Navegar para detalhes da loja:", store.id);
+    // console.log("Navegar para detalhes da loja:", store.id);
     router.push(`/(tabs)/stores/${store.id}`);
   };
 
@@ -187,16 +213,16 @@ export default function StoresScreen() {
             onPress={() => setSelectedCategory(category.id)}
             activeOpacity={0.7}
           >
-            <FontAwesome
+            <MaterialIcons
               name={category.icon as any}
-              size={14}
+              size={18}
               color={selectedCategory === category.id ? "#FFFFFF" : "#666666"}
             />
             <ThemedText
               style={[
                 styles.categoryChipText,
                 selectedCategory === category.id &&
-                  styles.categoryChipTextActive,
+                styles.categoryChipTextActive,
               ]}
             >
               {category.label}
@@ -327,7 +353,7 @@ export default function StoresScreen() {
         {/* Empty State */}
         {filteredStores.length === 0 && (
           <View style={styles.emptyState}>
-            <FontAwesome name="store" size={64} color="#CCCCCC" />
+            <MaterialIcons name="store" size={64} color="#CCCCCC" />
             <ThemedText style={styles.emptyTitle}>
               Nenhuma loja encontrada
             </ThemedText>
