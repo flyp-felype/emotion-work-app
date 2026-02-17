@@ -25,7 +25,7 @@ export default function LoginScreen() {
     } catch (error: any) {
       Alert.alert(
         "Erro no Login",
-        "Verifique sua matrícula e senha e tente novamente."
+        "Verifique seu CPF e senha e tente novamente."
       );
     } finally {
       setLoading(false);
@@ -34,7 +34,7 @@ export default function LoginScreen() {
 
   const handleFirstAccess = () => {
     // Navegar para tela de primeiro acesso
-    router.push("/(auth)/first-access"); // Descomentar esta linha
+    router.push("/(auth)/first-access"); // Descomentar esta linha 
   };
 
   return (

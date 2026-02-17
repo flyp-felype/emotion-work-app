@@ -1,4 +1,7 @@
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axios, {
+  AxiosError,
+  InternalAxiosRequestConfig
+} from "axios";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
@@ -8,13 +11,23 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-  async (config: AxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
     const token = await SecureStore.getItemAsync("user_token");
 
     if (token) {
       config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.set("Authorization", `Bearer ${token}`);
     }
+
+    console.log(
+      `[API Request] ${config.method?.toUpperCase()} ${config.baseURL}${config.url
+      }`,
+      {
+        headers: config.headers,
+        params: config.params,
+        data: config.data,
+      }
+    );
 
     return config;
   },
@@ -22,8 +35,19 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(
+      `[API Response] ${response.status} ${response.config.url}`,
+      response.data
+    );
+    return response;
+  },
   async (error: AxiosError) => {
+    console.error(
+      `[API Error] ${error.response?.status} ${error.config?.url}`,
+      error.response?.data
+    );
+
     const originalRequest: any = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -136,6 +160,102 @@ export type MeResponse = {
 
 export const getMe = async (): Promise<MeResponse> => {
   const response = await api.get("/me");
+  return response.data;
+};
+
+export interface PartnerCompany {
+  uuid: string;
+  name: string;
+  category: {
+    uuid: number;
+    name: string;
+    icon: string;
+  };
+  cnpj: string;
+  address: string;
+  phone: string;
+  business_hours: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PartnerCompaniesResponse {
+  total: number;
+  companies: PartnerCompany[];
+}
+
+export const getPartnerCompanies = async (
+  activeOnly: boolean = true
+): Promise<PartnerCompaniesResponse> => {
+  const response = await api.get("/partner-companies", {
+    params: { active_only: activeOnly },
+  });
+  return response.data;
+};
+
+
+
+export interface PartnerCompanyDetails extends PartnerCompany {
+  promotions: Promotion[];
+}
+
+export const getPartnerCompany = async (
+  id: string
+): Promise<PartnerCompanyDetails> => {
+  const response = await api.get(`/partner-companies/${id}`);
+  return response.data;
+};
+
+export interface Promotion {
+  uuid: string;
+  partner_company?: PartnerCompany;
+  title: string;
+  icon: string;
+  points_required: number;
+  description: string;
+  expires_in_days: number;
+  max_vouchers: number;
+  is_active: boolean;
+  is_featured?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PartnerPromotionsResponse {
+  promotions: Promotion[];
+}
+
+export const getPartnerPromotions = async (
+  activeOnly: boolean = true
+): Promise<PartnerPromotionsResponse> => {
+  const response = await api.get("/partner-promotions", {
+    params: { active_only: activeOnly },
+  });
+  return response.data;
+};
+
+export interface PartnerCategory {
+  id: number;
+  name: string;
+  icon: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PartnerCategoriesResponse {
+  total: number;
+  categories: PartnerCategory[];
+}
+
+export const getPartnerCategories = async (
+  activeOnly: boolean = true
+): Promise<PartnerCategoriesResponse> => {
+  const response = await api.get("/partner-categories", {
+    params: { active_only: activeOnly },
+  });
   return response.data;
 };
 

@@ -1,30 +1,20 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
 import {
   Dimensions,
-  Image,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
+import { Promotion } from "../../services/api";
 import { ThemedText } from "../themed-text";
 
-interface Product {
-  id: string;
-  name: string;
-  companyName: string;
-  description?: string;
-  points: number;
-  image?: string;
-  icon?: string;
-}
-
 interface RedeemableProductsCarouselProps {
-  products: Product[];
-  onRedeem: (product: Product) => void;
+  products: Promotion[];
+  onRedeem: (product: Promotion) => void;
   onViewAll?: () => void;
   userPoints: number;
 }
@@ -38,34 +28,74 @@ export function RedeemableProductsCarousel({
   userPoints = 150,
 }: RedeemableProductsCarouselProps) {
   // Dados mockados caso não seja passado produtos
-  const defaultProducts: Product[] = [
+  const defaultProducts: Promotion[] = [
     {
-      id: "2",
-      name: "Café grátis",
-      companyName: "Café do Ponto",
-      points: 80,
+      uuid: "2",
+      title: "Café grátis",
+      partner_company: {
+        uuid: "cafe-ponto",
+        name: "Café do Ponto",
+        category: { uuid: 1, name: "Café", icon: "coffee" },
+      },
+      points_required: 80,
       icon: "coffee",
+      description: "Um café delicioso",
+      expires_in_days: 30,
+      max_vouchers: 100,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
     {
-      id: "1",
-      name: "20% de desconto",
-      companyName: "Starbucks",
-      points: 200,
+      uuid: "1",
+      title: "20% de desconto",
+      partner_company: {
+        uuid: "starbucks",
+        name: "Starbucks",
+        category: { uuid: 1, name: "Café", icon: "coffee" },
+      },
+      points_required: 200,
       icon: "percent",
+      description: "Desconto em qualquer produto",
+      expires_in_days: 30,
+      max_vouchers: 100,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
     {
-      id: "3",
-      name: "R$ 50 de desconto",
-      companyName: "iFood",
-      points: 150,
+      uuid: "3",
+      title: "R$ 50 de desconto",
+      partner_company: {
+        uuid: "ifood",
+        name: "iFood",
+        category: { uuid: 2, name: "Delivery", icon: "cutlery" },
+      },
+      points_required: 150,
       icon: "cutlery",
+      description: "Voucher para iFood",
+      expires_in_days: 30,
+      max_vouchers: 100,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
     {
-      id: "4",
-      name: "Frete grátis",
-      companyName: "Amazon",
-      points: 100,
+      uuid: "4",
+      title: "Frete grátis",
+      partner_company: {
+        uuid: "amazon",
+        name: "Amazon",
+        category: { uuid: 3, name: "E-commerce", icon: "truck" },
+      },
+      points_required: 100,
       icon: "truck",
+      description: "Frete grátis na amazon",
+      expires_in_days: 30,
+      max_vouchers: 100,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
   ];
 
@@ -95,11 +125,11 @@ export function RedeemableProductsCarousel({
           decelerationRate="fast"
         >
           {displayProducts.map((product) => {
-            const canRedeemProduct = canRedeem(product.points);
+            const canRedeemProduct = canRedeem(product.points_required);
 
             return (
               <TouchableOpacity
-                key={product.id}
+                key={product.uuid}
                 style={[styles.card, !canRedeemProduct && styles.cardDisabled]}
                 onPress={() => canRedeemProduct && onRedeem(product)}
                 disabled={!canRedeemProduct}
@@ -107,10 +137,10 @@ export function RedeemableProductsCarousel({
               >
                 <View style={styles.cardLeft}>
                   <ThemedText style={styles.companyName}>
-                    {product.companyName}
+                    {product.partner_company.name}
                   </ThemedText>
                   <ThemedText style={styles.productName} numberOfLines={2}>
-                    {product.name}
+                    {product.title}
                   </ThemedText>
                   <LinearGradient
                     colors={["#8B5CF6", "#F87171"]}
@@ -123,7 +153,7 @@ export function RedeemableProductsCarousel({
                   >
                     <FontAwesome name="gift" size={10} color="#FFFFFF" />
                     <ThemedText style={styles.badgeText}>
-                      {product.points} pts
+                      {product.points_required} pts
                     </ThemedText>
                   </LinearGradient>
 
@@ -137,18 +167,12 @@ export function RedeemableProductsCarousel({
                 <View style={styles.cardRight}>
                   {product.icon ? (
                     <View style={styles.iconContainer}>
-                      <FontAwesome
+                      <MaterialIcons
                         name={product.icon as any}
                         size={32}
                         color={canRedeemProduct ? "#8B5CF6" : "#CCCCCC"}
                       />
                     </View>
-                  ) : product.image ? (
-                    <Image
-                      source={{ uri: product.image }}
-                      style={styles.productImage}
-                      resizeMode="cover"
-                    />
                   ) : (
                     <View style={styles.iconContainer}>
                       <FontAwesome

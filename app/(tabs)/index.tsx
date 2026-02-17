@@ -10,25 +10,37 @@ import { HomeHeader } from "../../components/home/HomeHeader";
 import { PointsHistory } from "../../components/home/PointsHistory";
 import { RedeemableProductsCarousel } from "../../components/home/RedeemableProductsCarousel";
 import { UserGreetingCard } from "../../components/home/UserGreetingCard";
-import { getMe, MeResponse } from "../../services/api";
+import {
+  getMe,
+  getPartnerPromotions,
+  MeResponse,
+  Promotion,
+} from "../../services/api";
+
 export default function HomeScreen() {
   const [meData, setMeData] = useState<MeResponse | null>(null);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
 
   useEffect(() => {
     let isMounted = true;
 
-    const loadMe = async () => {
+    const loadData = async () => {
       try {
-        const response = await getMe();
+        const [meResponse, promotionsResponse] = await Promise.all([
+          getMe(),
+          getPartnerPromotions(true),
+        ]);
+
         if (isMounted) {
-          setMeData(response);
+          setMeData(meResponse);
+          setPromotions(promotionsResponse.promotions);
         }
       } catch (error) {
-        console.error("Erro ao carregar /me", error);
+        console.error("Erro ao carregar dados", error);
       }
     };
 
-    loadMe();
+    loadData();
 
     return () => {
       isMounted = false;
@@ -124,10 +136,10 @@ export default function HomeScreen() {
 
           <View style={styles.section}>
             <RedeemableProductsCarousel
-              products={[]}
+              products={promotions}
               onRedeem={handleRedeemProduct}
               onViewAll={handleViewAllProducts}
-              userPoints={150}
+              userPoints={meData?.balance ?? 0}
             />
           </View>
 

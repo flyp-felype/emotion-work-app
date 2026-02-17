@@ -1,87 +1,79 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "../../../components/themed-text";
-
-interface Coupon {
-  id: string;
-  name: string;
-  description: string;
-  points: number;
-  available: boolean;
-  validUntil: string;
-}
+import { getMe, getPartnerCompany, PartnerCompanyDetails, Promotion } from "../../../services/api";
 
 export default function StoreDetailsScreen() {
   const { id } = useLocalSearchParams();
-  const userPoints = 150; // Mock - pegar do contexto/estado global
+  const [store, setStore] = useState<PartnerCompanyDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [userPoints, setUserPoints] = useState(0);
 
-  // Mock de dados da loja
-  const store = {
-    id: id as string,
-    name: "Starbucks Centro",
-    description:
-      "Desfrute dos melhores cafés e bebidas especiais com seus emotions!",
-    category: "Alimentação",
-    distance: 0.5,
-    address: "Av. Paulista, 1000 - São Paulo, SP",
-    phone: "(11) 3000-0000",
-    hours: "Seg-Sex: 7h-20h | Sáb-Dom: 8h-18h",
-    icon: "coffee",
+  useEffect(() => {
+    loadStore();
+    loadUserPoints();
+  }, [id]);
+
+  const loadUserPoints = async () => {
+    try {
+      const data = await getMe();
+      setUserPoints(data.balance);
+    } catch (error) {
+      console.error("Error fetching user points:", error);
+    }
   };
 
-  const coupons: Coupon[] = [
-    {
-      id: "1",
-      name: "Café Grátis",
-      description: "Qualquer café de tamanho médio",
-      points: 50,
-      available: true,
-      validUntil: "31/12/2025",
-    },
-    {
-      id: "2",
-      name: "20% de Desconto",
-      description: "Em qualquer produto da loja",
-      points: 80,
-      available: true,
-      validUntil: "31/12/2025",
-    },
-    {
-      id: "3",
-      name: "Combo Café + Lanche",
-      description: "Café médio + sanduíche à escolha",
-      points: 120,
-      available: true,
-      validUntil: "31/12/2025",
-    },
-    {
-      id: "4",
-      name: "Bebida Premium Grátis",
-      description: "Qualquer bebida especial tamanho grande",
-      points: 200,
-      available: false, // Usuário não tem pontos suficientes
-      validUntil: "31/12/2025",
-    },
-  ];
+  const loadStore = async () => {
+    try {
+      setLoading(true);
+      if (typeof id === "string") {
+        const data = await getPartnerCompany(id);
+        setStore(data);
+      }
+    } catch (error) {
+      console.error("Error fetching store details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleRedeemCoupon = (coupon: Coupon) => {
-    if (userPoints >= coupon.points) {
+  const handleRedeemCoupon = (coupon: Promotion) => {
+    if (userPoints >= coupon.points_required && store) {
       router.push({
         pathname: "/(tabs)/stores/redeem",
         params: {
-          storeId: store.id,
+          storeId: store.uuid,
           storeName: store.name,
-          couponId: coupon.id,
-          couponName: coupon.name,
-          couponPoints: coupon.points,
+          couponId: coupon.uuid,
+          couponName: coupon.title,
+          couponPoints: coupon.points_required,
         },
       });
     }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#8B5CF6" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!store) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <ThemedText>Loja não encontrada</ThemedText>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButtonSimple}>
+          <ThemedText style={styles.backButtonText}>Voltar</ThemedText>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -96,11 +88,11 @@ export default function StoreDetailsScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <FontAwesome name="arrow-left" size={20} color="#FFFFFF" />
+          <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Detalhes da Loja</ThemedText>
         <TouchableOpacity style={styles.headerRight}>
-          <FontAwesome name="heart-o" size={20} color="#FFFFFF" />
+          <MaterialIcons name="favorite-border" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </LinearGradient>
 
@@ -112,26 +104,26 @@ export default function StoreDetailsScreen() {
         {/* Store Info Card */}
         <View style={styles.storeCard}>
           <View style={styles.storeIconContainer}>
-            <FontAwesome name={store.icon as any} size={48} color="#8B5CF6" />
+            <MaterialIcons name={(store.category.icon as any) || "store"} size={48} color="#8B5CF6" />
           </View>
           <ThemedText style={styles.storeName}>{store.name}</ThemedText>
-          <ThemedText style={styles.storeCategory}>{store.category}</ThemedText>
+          <ThemedText style={styles.storeCategory}>{store.category.name}</ThemedText>
           <ThemedText style={styles.storeDescription}>
             {store.description}
           </ThemedText>
 
           <View style={styles.storeDetails}>
             <View style={styles.detailRow}>
-              <FontAwesome name="map-marker" size={16} color="#666666" />
+              <MaterialIcons name="location-on" size={16} color="#666666" />
               <ThemedText style={styles.detailText}>{store.address}</ThemedText>
             </View>
             <View style={styles.detailRow}>
-              <FontAwesome name="phone" size={16} color="#666666" />
+              <MaterialIcons name="phone" size={16} color="#666666" />
               <ThemedText style={styles.detailText}>{store.phone}</ThemedText>
             </View>
             <View style={styles.detailRow}>
-              <FontAwesome name="clock-o" size={16} color="#666666" />
-              <ThemedText style={styles.detailText}>{store.hours}</ThemedText>
+              <MaterialIcons name="access-time" size={16} color="#666666" />
+              <ThemedText style={styles.detailText}>{store.business_hours}</ThemedText>
             </View>
           </View>
         </View>
@@ -146,7 +138,7 @@ export default function StoreDetailsScreen() {
           >
             <ThemedText style={styles.pointsLabel}>Seus Emotions</ThemedText>
             <View style={styles.pointsRow}>
-              <FontAwesome name="gift" size={20} color="#FFFFFF" />
+              <MaterialIcons name="card-giftcard" size={24} color="#FFFFFF" />
               <ThemedText style={styles.pointsValue}>{userPoints}</ThemedText>
             </View>
           </LinearGradient>
@@ -155,15 +147,16 @@ export default function StoreDetailsScreen() {
         {/* Coupons Section */}
         <View style={styles.couponsSection}>
           <ThemedText style={styles.sectionTitle}>
-            Cupons Disponíveis ({coupons.length})
+            Cupons Disponíveis ({store.promotions.length})
           </ThemedText>
 
-          {coupons.map((coupon) => {
-            const canRedeem = userPoints >= coupon.points;
+          {store.promotions.map((coupon) => {
+            const canRedeem = userPoints >= coupon.points_required;
+            const iconName = coupon.icon || "confirmation-number";
 
             return (
               <View
-                key={coupon.id}
+                key={coupon.uuid}
                 style={[
                   styles.couponCard,
                   !canRedeem && styles.couponCardDisabled,
@@ -171,8 +164,8 @@ export default function StoreDetailsScreen() {
               >
                 <View style={styles.couponLeft}>
                   <View style={styles.couponIconContainer}>
-                    <FontAwesome
-                      name="ticket"
+                    <MaterialIcons
+                      name={iconName as any}
                       size={24}
                       color={canRedeem ? "#8B5CF6" : "#CCCCCC"}
                     />
@@ -184,7 +177,7 @@ export default function StoreDetailsScreen() {
                         !canRedeem && styles.couponNameDisabled,
                       ]}
                     >
-                      {coupon.name}
+                      {coupon.title}
                     </ThemedText>
                     <ThemedText
                       style={[
@@ -195,16 +188,16 @@ export default function StoreDetailsScreen() {
                       {coupon.description}
                     </ThemedText>
                     <ThemedText style={styles.couponValid}>
-                      Válido até {coupon.validUntil}
+                      Válido por {coupon.expires_in_days} dias
                     </ThemedText>
                   </View>
                 </View>
 
                 <View style={styles.couponRight}>
                   <View style={styles.couponPointsBadge}>
-                    <FontAwesome name="gift" size={10} color="#8B5CF6" />
+                    <MaterialIcons name="card-giftcard" size={10} color="#8B5CF6" />
                     <ThemedText style={styles.couponPoints}>
-                      {coupon.points}
+                      {coupon.points_required}
                     </ThemedText>
                   </View>
 
@@ -437,6 +430,7 @@ const styles = StyleSheet.create({
   },
   couponDescriptionDisabled: {
     color: "#CCCCCC",
+    textAlignVertical: "center",
   },
   couponValid: {
     fontSize: 11,
@@ -476,5 +470,17 @@ const styles = StyleSheet.create({
   },
   redeemButtonTextDisabled: {
     color: "#999999",
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backButtonSimple: {
+    marginTop: 20,
+    padding: 10,
+  },
+  backButtonText: {
+    color: "#8B5CF6",
+    fontSize: 16,
   },
 });
