@@ -195,9 +195,22 @@ export const getPartnerCompanies = async (
   return response.data;
 };
 
+
+
+export interface PartnerCompanyDetails extends PartnerCompany {
+  promotions: Promotion[];
+}
+
+export const getPartnerCompany = async (
+  id: string
+): Promise<PartnerCompanyDetails> => {
+  const response = await api.get(`/partner-companies/${id}`);
+  return response.data;
+};
+
 export interface Promotion {
   uuid: string;
-  partner_company: PartnerCompany;
+  partner_company?: PartnerCompany;
   title: string;
   icon: string;
   points_required: number;
@@ -205,6 +218,7 @@ export interface Promotion {
   expires_in_days: number;
   max_vouchers: number;
   is_active: boolean;
+  is_featured?: boolean;
   created_at: string;
   updated_at: string;
 }
