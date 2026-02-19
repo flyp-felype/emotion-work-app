@@ -131,8 +131,8 @@ export const postCheckin = async (
 
 export type MeTransaction = {
   id: string;
-  type: "earn" | "redeem";
-  amount: number;
+  transaction_type: "checkin" | "checkount";
+  points: number;
   description: string;
   created_at: string;
 };

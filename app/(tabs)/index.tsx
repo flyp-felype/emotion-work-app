@@ -93,8 +93,8 @@ export default function HomeScreen() {
   const formattedTransactions =
     meData?.transactions.map((transaction) => ({
       id: transaction.id,
-      type: transaction.type,
-      amount: transaction.amount,
+      transaction_type: transaction.transaction_type,
+      points: transaction.points,
       description: transaction.description,
       date: new Date(transaction.created_at).toLocaleString("pt-BR", {
         day: "2-digit",
