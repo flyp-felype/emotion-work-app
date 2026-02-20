@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { ThemedText } from "../../components/themed-text";
-import { postCheckin } from "../../services/api";
+import { getMe, postCheckin } from "../../services/api";
 
 type EmotionType = "very-happy" | "happy" | "neutral" | "sad" | "very-sad";
 type ImageType = "1" | "2" | "3" | "4";
@@ -166,6 +166,10 @@ export default function CheckInScreen() {
 
       setPointsEarned(response.points_earned);
       setSuccessMessage(response.message || "Check-in realizado com sucesso");
+      // Atualiza os dados do usuário (pontos e extrato) em background
+      getMe().catch((err) =>
+        console.warn("[redeem] Falha ao atualizar /me após check-in", err)
+      );
       setStep("success");
     } catch (error: any) {
       Alert.alert(
@@ -187,11 +191,17 @@ export default function CheckInScreen() {
     }
   };
 
-  const handleGoHome = () => {
+  const handleGoHome = async () => {
     setStep(1);
     setCheckInData({});
     setPointsEarned(0);
     setSuccessMessage("");
+    // Busca os dados atualizados do usuário antes de voltar para a Home
+    try {
+      await getMe();
+    } catch (err) {
+      console.warn("[redeem] Falha ao buscar /me ao voltar para Home", err);
+    }
     router.push("/(tabs)");
   };
 
