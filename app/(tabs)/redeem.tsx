@@ -1,8 +1,10 @@
 import { FontAwesome, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
+import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -12,9 +14,10 @@ import {
   View,
 } from "react-native";
 import { ThemedText } from "../../components/themed-text";
+import { getMe, postCheckin } from "../../services/api";
 
 type EmotionType = "very-happy" | "happy" | "neutral" | "sad" | "very-sad";
-type ImageType = "work" | "team" | "office" | "event";
+type ImageType = "1" | "2" | "3" | "4";
 
 interface CheckInData {
   emotion?: EmotionType;
@@ -25,6 +28,13 @@ interface CheckInData {
 export default function CheckInScreen() {
   const [step, setStep] = useState<1 | 2 | 3 | "success">(1);
   const [checkInData, setCheckInData] = useState<CheckInData>({});
+  const [permission, requestPermission] = useCameraPermissions();
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraType, setCameraType] = useState<CameraType>("front");
+  const cameraRef = useRef<CameraView>(null);
+  const [loading, setLoading] = useState(false);
+  const [pointsEarned, setPointsEarned] = useState(0);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleEmotionSelect = (emotion: EmotionType) => {
     setCheckInData({ ...checkInData, emotion });
@@ -38,13 +48,72 @@ export default function CheckInScreen() {
     setCheckInData({ ...checkInData, selectedImages: newImages });
   };
 
-  const handleTakeSelfie = () => {
-    // Simulando captura de selfie
-    setCheckInData({ ...checkInData, selfie: "captured" });
-    Alert.alert("Selfie capturada!", "Sua foto foi registrada com sucesso.");
+  const handleStartCamera = async () => {
+    if (!permission?.granted) {
+      const result = await requestPermission();
+      if (!result.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "Precisamos de acesso à câmera para tirar a selfie."
+        );
+        return;
+      }
+    }
+    setIsCameraOpen(true);
   };
 
-  const handleNext = () => {
+  const handleTakePicture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.7,
+          base64: true,
+        });
+
+        if (photo?.base64) {
+          setCheckInData({
+            ...checkInData,
+            selfie: `data:image/jpg;base64,${photo.base64}`,
+          });
+          setIsCameraOpen(false);
+        }
+      } catch (error) {
+        Alert.alert("Erro", "Não foi possível capturar a foto.");
+      }
+    }
+  };
+
+  const handleRetake = () => {
+    setCheckInData({ ...checkInData, selfie: undefined });
+    handleStartCamera();
+  };
+
+  const getEmotionScore = (emotion: EmotionType): number => {
+    switch (emotion) {
+      case "very-happy":
+        return 5;
+      case "happy":
+        return 4;
+      case "neutral":
+        return 3;
+      case "sad":
+        return 2;
+      case "very-sad":
+        return 1;
+      default:
+        return 3;
+    }
+  };
+
+  const getImageScore = (images: ImageType[]): number => {
+    if (!images || images.length === 0) return 3;
+
+    const sum = images.reduce((acc, img) => acc + parseInt(img), 0);
+    const average = sum / images.length;
+    return Math.round(average);
+  };
+
+  const handleNext = async () => {
     if (step === 1 && !checkInData.emotion) {
       Alert.alert(
         "Atenção",
@@ -65,9 +134,52 @@ export default function CheckInScreen() {
     }
 
     if (step === 3) {
-      setStep("success");
+      await submitCheckIn();
     } else {
       setStep(((step as number) + 1) as 1 | 2 | 3);
+    }
+  };
+
+  const submitCheckIn = async () => {
+    if (
+      !checkInData.emotion ||
+      !checkInData.selectedImages ||
+      !checkInData.selfie
+    )
+      return;
+
+    setLoading(true);
+    try {
+      const emotionScore = getEmotionScore(checkInData.emotion);
+      const imageScore = getImageScore(checkInData.selectedImages);
+
+      // Remove prefixo do base64 se existir, pois alguns backends preferem sem
+      const base64Data = checkInData.selfie.includes("base64,")
+        ? checkInData.selfie.split("base64,")[1]
+        : checkInData.selfie;
+
+      const response = await postCheckin({
+        emotion_score: emotionScore,
+        image_score: imageScore,
+        selfie_base64: base64Data,
+      });
+
+      setPointsEarned(response.points_earned);
+      setSuccessMessage(response.message || "Check-in realizado com sucesso");
+      // Atualiza os dados do usuário (pontos e extrato) em background
+      getMe().catch((err) =>
+        console.warn("[redeem] Falha ao atualizar /me após check-in", err)
+      );
+      setStep("success");
+    } catch (error: any) {
+      Alert.alert(
+        "Erro",
+        error.response?.data?.message ||
+        "Ocorreu um erro ao enviar seu check-in. Tente novamente."
+      );
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,9 +191,17 @@ export default function CheckInScreen() {
     }
   };
 
-  const handleGoHome = () => {
+  const handleGoHome = async () => {
     setStep(1);
     setCheckInData({});
+    setPointsEarned(0);
+    setSuccessMessage("");
+    // Busca os dados atualizados do usuário antes de voltar para a Home
+    try {
+      await getMe();
+    } catch (err) {
+      console.warn("[redeem] Falha ao buscar /me ao voltar para Home", err);
+    }
     router.push("/(tabs)");
   };
 
@@ -152,9 +272,7 @@ export default function CheckInScreen() {
             </View>
 
             <Text style={styles.successTitle}>Parabéns!</Text>
-            <Text style={styles.successSubtitle}>
-              Check-in realizado com sucesso
-            </Text>
+            <Text style={styles.successSubtitle}>{successMessage}</Text>
 
             <Text style={styles.successMessage}>
               Obrigado por compartilhar seu dia conosco! Sua participação é
@@ -164,7 +282,7 @@ export default function CheckInScreen() {
 
             <View style={styles.pointsEarnedContainer}>
               <FontAwesome name="gift" size={24} color="#FFFFFF" />
-              <Text style={styles.pointsEarnedText}>+50 emotions</Text>
+              <Text style={styles.pointsEarnedText}>+{pointsEarned} emotions</Text>
             </View>
 
             <TouchableOpacity
@@ -177,6 +295,48 @@ export default function CheckInScreen() {
             </TouchableOpacity>
           </View>
         </LinearGradient>
+      </View>
+    );
+  }
+
+  // Se a câmera estiver aberta, mostre a tela da câmera
+  if (isCameraOpen) {
+    return (
+      <View style={styles.cameraContainer}>
+        <CameraView
+          style={styles.camera}
+          facing={cameraType}
+          ref={cameraRef}
+        >
+          <View style={styles.cameraControls}>
+            <TouchableOpacity
+              style={styles.cameraButtonClose}
+              onPress={() => setIsCameraOpen(false)}
+            >
+              <FontAwesome name="close" size={24} color="#FFF" />
+            </TouchableOpacity>
+
+            <View style={styles.cameraBottomBar}>
+              <TouchableOpacity
+                style={styles.captureButton}
+                onPress={handleTakePicture}
+              >
+                <View style={styles.captureInner} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.flipButton}
+                onPress={() =>
+                  setCameraType((current) =>
+                    current === "back" ? "front" : "back"
+                  )
+                }
+              >
+                <FontAwesome name="refresh" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </CameraView>
       </View>
     );
   }
@@ -228,7 +388,7 @@ export default function CheckInScreen() {
                   style={[
                     styles.emotionCard,
                     checkInData.emotion === emotion.type &&
-                      styles.emotionCardSelected,
+                    styles.emotionCardSelected,
                   ]}
                   onPress={() => handleEmotionSelect(emotion.type)}
                   activeOpacity={0.7}
@@ -300,7 +460,7 @@ export default function CheckInScreen() {
               {!checkInData.selfie ? (
                 <TouchableOpacity
                   style={styles.selfieButton}
-                  onPress={handleTakeSelfie}
+                  onPress={handleStartCamera}
                   activeOpacity={0.8}
                 >
                   <FontAwesome name="camera" size={60} color="#8B5CF6" />
@@ -310,11 +470,18 @@ export default function CheckInScreen() {
                 </TouchableOpacity>
               ) : (
                 <View style={styles.selfiePreview}>
-                  <FontAwesome name="check-circle" size={60} color="#10B981" />
-                  <ThemedText style={styles.selfieSuccessText}>
-                    Selfie capturada!
-                  </ThemedText>
-                  <TouchableOpacity onPress={handleTakeSelfie}>
+                  <Image
+                    source={{ uri: checkInData.selfie }}
+                    style={styles.selfieImagePreview}
+                  />
+                  <View style={styles.selfieSuccessBadge}>
+                    <FontAwesome name="check-circle" size={24} color="#10B981" />
+                    <ThemedText style={styles.selfieSuccessText}>
+                      Selfie capturada!
+                    </ThemedText>
+                  </View>
+
+                  <TouchableOpacity onPress={handleRetake}>
                     <ThemedText style={styles.retakeText}>
                       Tirar novamente
                     </ThemedText>
@@ -329,20 +496,29 @@ export default function CheckInScreen() {
       {/* Footer Button */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.nextButton}
+          style={[styles.nextButton, loading && styles.nextButtonDisabled]}
           onPress={handleNext}
           activeOpacity={0.8}
+          disabled={loading}
         >
           <LinearGradient
-            colors={["#8B5CF6", "#F87171"]}
+            colors={
+              loading ? ["#ccc", "#ccc"] : ["#8B5CF6", "#F87171"]
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.nextButtonGradient}
           >
-            <ThemedText style={styles.nextButtonText}>
-              {step === 3 ? "Finalizar Check-in" : "Próxima Etapa"}
-            </ThemedText>
-            <FontAwesome5 name="arrow-right" size={16} color="#FFFFFF" />
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <>
+                <ThemedText style={styles.nextButtonText}>
+                  {step === 3 ? "Finalizar Check-in" : "Próxima Etapa"}
+                </ThemedText>
+                <FontAwesome5 name="arrow-right" size={16} color="#FFFFFF" />
+              </>
+            )}
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -531,6 +707,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
   },
+  selfieImagePreview: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 4,
+    borderColor: "#8B5CF6",
+  },
+  selfieSuccessBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   selfieSuccessText: {
     fontSize: 18,
     fontWeight: "600",
@@ -551,6 +739,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 20,
     overflow: "hidden",
+  },
+  nextButtonDisabled: {
+    opacity: 0.7,
   },
   nextButtonGradient: {
     flexDirection: "row",
@@ -631,4 +822,50 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#8B5CF6",
   },
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraControls: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  cameraButtonClose: {
+    alignSelf: 'flex-end',
+    padding: 10,
+    marginTop: 40,
+  },
+  cameraBottomBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 30,
+    paddingHorizontal: 20,
+  },
+  captureButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  captureInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+  },
+  flipButton: {
+    padding: 10,
+  }
 });

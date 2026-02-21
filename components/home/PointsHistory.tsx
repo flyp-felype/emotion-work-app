@@ -7,8 +7,8 @@ import { ThemedText } from "../themed-text";
 interface PointsHistoryProps {
   transactions: {
     id: string;
-    type: "earn" | "redeem";
-    amount: number;
+    transaction_type: "checkin" | "checkount";
+    points: number;
     description: string;
     date: string;
   }[];
@@ -37,7 +37,7 @@ export function PointsHistory({ transactions, onViewAll }: PointsHistoryProps) {
               </View>
               <LinearGradient
                 colors={
-                  transaction.type === "earn"
+                  transaction.transaction_type === "checkin"
                     ? ["#8B5CF6", "#F87171"]
                     : ["#EF4444", "#F87171"]
                 }
@@ -47,8 +47,8 @@ export function PointsHistory({ transactions, onViewAll }: PointsHistoryProps) {
               >
                 <FontAwesome name="gift" size={12} color="#FFFFFF" />
                 <ThemedText style={styles.badgeText}>
-                  {transaction.type === "earn" ? "+" : ""}
-                  {transaction.amount}
+                  {transaction.transaction_type === "checkin" ? "+" : ""}
+                  {transaction.points}
                 </ThemedText>
               </LinearGradient>
             </View>

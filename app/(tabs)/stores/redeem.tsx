@@ -134,7 +134,7 @@ export default function RedeemScreen() {
           <View style={styles.pointsUsed}>
             <FontAwesome name="gift" size={14} color="#8B5CF6" />
             <ThemedText style={styles.pointsText}>
-              -{couponPoints} pontos
+              -{couponPoints} emotions
             </ThemedText>
           </View>
         </View>

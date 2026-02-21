@@ -111,10 +111,28 @@ export const onboardingService = {
   },
 };
 
+export interface CheckInRequest {
+  emotion_score: number;
+  image_score: number;
+  selfie_base64: string;
+}
+
+export interface CheckInResponse {
+  points_earned: number;
+  message: string;
+}
+
+export const postCheckin = async (
+  data: CheckInRequest
+): Promise<CheckInResponse> => {
+  const response = await api.post("/checkin/", data);
+  return response.data;
+};
+
 export type MeTransaction = {
   id: string;
-  type: "earn" | "redeem";
-  amount: number;
+  transaction_type: "checkin" | "checkount";
+  points: number;
   description: string;
   created_at: string;
 };
@@ -156,6 +174,8 @@ export type MeResponse = {
   } | null;
   transactions: MeTransaction[];
   balance: number;
+  consecutive_days: number;
+  total_checkins: number;
 };
 
 export const getMe = async (): Promise<MeResponse> => {

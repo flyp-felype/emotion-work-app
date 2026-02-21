@@ -1,6 +1,7 @@
+import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionButtons } from "../../components/home/ActionButtons";
@@ -21,31 +22,33 @@ export default function HomeScreen() {
   const [meData, setMeData] = useState<MeResponse | null>(null);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
 
-  useEffect(() => {
-    let isMounted = true;
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
 
-    const loadData = async () => {
-      try {
-        const [meResponse, promotionsResponse] = await Promise.all([
-          getMe(),
-          getPartnerPromotions(true),
-        ]);
+      const loadData = async () => {
+        try {
+          const [meResponse, promotionsResponse] = await Promise.all([
+            getMe(),
+            getPartnerPromotions(true),
+          ]);
 
-        if (isMounted) {
-          setMeData(meResponse);
-          setPromotions(promotionsResponse.promotions);
+          if (isMounted) {
+            setMeData(meResponse);
+            setPromotions(promotionsResponse.promotions);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar dados", error);
         }
-      } catch (error) {
-        console.error("Erro ao carregar dados", error);
-      }
-    };
+      };
 
-    loadData();
+      loadData();
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+      return () => {
+        isMounted = false;
+      };
+    }, [])
+  );
 
   const activeCoupons = [
     {
@@ -93,8 +96,8 @@ export default function HomeScreen() {
   const formattedTransactions =
     meData?.transactions.map((transaction) => ({
       id: transaction.id,
-      type: transaction.type,
-      amount: transaction.amount,
+      transaction_type: transaction.transaction_type,
+      points: transaction.points,
       description: transaction.description,
       date: new Date(transaction.created_at).toLocaleString("pt-BR", {
         day: "2-digit",
@@ -118,8 +121,8 @@ export default function HomeScreen() {
           <View style={[styles.section, styles.sectionSecondary]}>
             <UserGreetingCard
               name={meData?.employee.name ?? "Funcionário"}
-              consecutiveDays={0}
-              accumulatedPoints={0}
+              consecutiveDays={meData?.consecutive_days ?? 0}
+              totalCheckins={meData?.total_checkins ?? 0}
             />
           </View>
 
