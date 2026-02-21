@@ -121,8 +121,8 @@ export default function HomeScreen() {
           <View style={[styles.section, styles.sectionSecondary]}>
             <UserGreetingCard
               name={meData?.employee.name ?? "Funcionário"}
-              consecutiveDays={0}
-              accumulatedPoints={0}
+              consecutiveDays={meData?.consecutive_days ?? 0}
+              totalCheckins={meData?.total_checkins ?? 0}
             />
           </View>
 

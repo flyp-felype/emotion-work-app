@@ -174,6 +174,8 @@ export type MeResponse = {
   } | null;
   transactions: MeTransaction[];
   balance: number;
+  consecutive_days: number;
+  total_checkins: number;
 };
 
 export const getMe = async (): Promise<MeResponse> => {

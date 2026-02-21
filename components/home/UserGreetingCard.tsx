@@ -7,13 +7,13 @@ import { ThemedText } from "../themed-text";
 interface UserGreetingCardProps {
   name: string;
   consecutiveDays: number;
-  accumulatedPoints: number;
+  totalCheckins: number;
 }
 
 export function UserGreetingCard({
   name = "Funcionário",
   consecutiveDays = 5,
-  accumulatedPoints = 150,
+  totalCheckins = 0,
 }: UserGreetingCardProps) {
   const iconColor = useThemeColor({}, "icon");
 
@@ -40,7 +40,7 @@ export function UserGreetingCard({
             style={styles.statIcon}
           />
           <ThemedText style={styles.statText}>
-            {accumulatedPoints} emotions acumulados
+            {totalCheckins} check-ins realizados
           </ThemedText>
         </View>
       </View>
