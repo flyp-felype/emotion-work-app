@@ -131,10 +131,57 @@ export const postCheckin = async (
 
 export type MeTransaction = {
   id: string;
-  transaction_type: "checkin" | "checkount";
+  transaction_type: "checkin" | "checkout";
   points: number;
   description: string;
   created_at: string;
+};
+
+export type TransactionSummary = {
+  total_checkin: number;
+  total_checkout: number;
+  balance: number;
+};
+
+export type TransactionItem = {
+  id: number;
+  uuid: string;
+  user_id: number;
+  transaction_type: "checkin" | "checkout";
+  points: number;
+  description: string;
+  created_at: string;
+};
+
+export type TransactionsResponse = {
+  summary: TransactionSummary;
+  transactions: TransactionItem[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+export type TransactionsParams = {
+  page?: number;
+  page_size?: number;
+  start_date?: string;   // YYYY-MM-DD
+  end_date?: string;     // YYYY-MM-DD
+  transaction_type?: "checkin" | "checkout";
+};
+
+export const getTransactions = async (
+  params: TransactionsParams = {}
+): Promise<TransactionsResponse> => {
+  const query: Record<string, string | number> = {
+    page: params.page ?? 1,
+    page_size: params.page_size ?? 10,
+  };
+  if (params.start_date) query.start_date = params.start_date;
+  if (params.end_date) query.end_date = params.end_date;
+  if (params.transaction_type) query.transaction_type = params.transaction_type;
+
+  const response = await api.get("/me/transactions", { params: query });
+  return response.data;
 };
 
 export type MeResponse = {
@@ -276,6 +323,25 @@ export const getPartnerCategories = async (
   const response = await api.get("/partner-categories", {
     params: { active_only: activeOnly },
   });
+  return response.data;
+};
+
+export interface AbstractImage {
+  id: number;
+  category: string;
+  score: number;
+  image_url: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RandomImagesResponse {
+  images: AbstractImage[];
+}
+
+export const getRandomImages = async (): Promise<RandomImagesResponse> => {
+  const response = await api.get("/abstract-images/random-set");
   return response.data;
 };
 

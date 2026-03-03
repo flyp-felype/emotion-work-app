@@ -14,10 +14,12 @@ import {
   View,
 } from "react-native";
 import { ThemedText } from "../../components/themed-text";
-import { getMe, postCheckin } from "../../services/api";
+import { AbstractImage, getMe, getRandomImages, postCheckin } from "../../services/api";
+
+const API_BASE_URL = "http://65.108.151.196";
 
 type EmotionType = "very-happy" | "happy" | "neutral" | "sad" | "very-sad";
-type ImageType = "1" | "2" | "3" | "4";
+type ImageType = string; // image id from API
 
 interface CheckInData {
   emotion?: EmotionType;
@@ -35,6 +37,8 @@ export default function CheckInScreen() {
   const [loading, setLoading] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [successMessage, setSuccessMessage] = useState("");
+  const [apiImages, setApiImages] = useState<AbstractImage[]>([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
 
   const handleEmotionSelect = (emotion: EmotionType) => {
     setCheckInData({ ...checkInData, emotion });
@@ -105,12 +109,30 @@ export default function CheckInScreen() {
     }
   };
 
-  const getImageScore = (images: ImageType[]): number => {
-    if (!images || images.length === 0) return 3;
+  const getImageScore = (selectedIds: ImageType[]): number => {
+    if (!selectedIds || selectedIds.length === 0 || apiImages.length === 0)
+      return 0;
 
-    const sum = images.reduce((acc, img) => acc + parseInt(img), 0);
-    const average = sum / images.length;
-    return Math.round(average);
+    const selectedImages = apiImages.filter((img) =>
+      selectedIds.includes(String(img.id))
+    );
+    if (selectedImages.length === 0) return 0;
+
+    const sum = selectedImages.reduce((acc, img) => acc + img.score, 0);
+    return sum / selectedImages.length;
+  };
+
+  const fetchApiImages = async () => {
+    setImagesLoading(true);
+    try {
+      const data = await getRandomImages();
+      setApiImages(data.images);
+    } catch (err) {
+      Alert.alert("Erro", "Não foi possível carregar as imagens. Tente novamente.");
+      console.error("[redeem] Erro ao buscar imagens:", err);
+    } finally {
+      setImagesLoading(false);
+    }
   };
 
   const handleNext = async () => {
@@ -136,7 +158,11 @@ export default function CheckInScreen() {
     if (step === 3) {
       await submitCheckIn();
     } else {
-      setStep(((step as number) + 1) as 1 | 2 | 3);
+      const nextStep = ((step as number) + 1) as 1 | 2 | 3;
+      setStep(nextStep);
+      if (nextStep === 2) {
+        fetchApiImages();
+      }
     }
   };
 
@@ -238,24 +264,7 @@ export default function CheckInScreen() {
     },
   ];
 
-  const images = [
-    {
-      type: "1" as ImageType,
-      source: require("../../assets/images/psy/1.png"),
-    },
-    {
-      type: "2" as ImageType,
-      source: require("../../assets/images/psy/2.png"),
-    },
-    {
-      type: "3" as ImageType,
-      source: require("../../assets/images/psy/3.png"),
-    },
-    {
-      type: "4" as ImageType,
-      source: require("../../assets/images/psy/4.png"),
-    },
-  ];
+  // Images come from the API (apiImages state)
 
   if (step === "success") {
     return (
@@ -416,35 +425,42 @@ export default function CheckInScreen() {
               O que descreve melhor seu dia?
             </ThemedText>
 
-            <View style={styles.imagesGrid}>
-              {images.map((image) => {
-                const isSelected = checkInData.selectedImages?.includes(
-                  image.type
-                );
-                return (
-                  <TouchableOpacity
-                    key={image.type}
-                    style={[
-                      styles.imageCard,
-                      isSelected && styles.imageCardSelected,
-                    ]}
-                    onPress={() => handleImageToggle(image.type)}
-                    activeOpacity={0.7}
-                  >
-                    <Image
-                      source={image.source}
-                      style={styles.psyImage}
-                      resizeMode="cover"
-                    />
-                    {isSelected && (
-                      <View style={styles.selectedBadge}>
-                        <FontAwesome name="check" size={12} color="#FFFFFF" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            {imagesLoading ? (
+              <View style={styles.imagesLoadingContainer}>
+                <ActivityIndicator size="large" color="#8B5CF6" />
+              </View>
+            ) : (
+              <View style={styles.imagesGrid}>
+                {apiImages.map((image) => {
+                  const imageId = String(image.id);
+                  const isSelected =
+                    checkInData.selectedImages?.includes(imageId);
+                  const imageUri = `${API_BASE_URL}/media${image.image_url}`;
+                  return (
+                    <TouchableOpacity
+                      key={imageId}
+                      style={[
+                        styles.imageCard,
+                        isSelected && styles.imageCardSelected,
+                      ]}
+                      onPress={() => handleImageToggle(imageId)}
+                      activeOpacity={0.7}
+                    >
+                      <Image
+                        source={{ uri: imageUri }}
+                        style={styles.psyImage}
+                        resizeMode="cover"
+                      />
+                      {isSelected && (
+                        <View style={styles.selectedBadge}>
+                          <FontAwesome name="check" size={12} color="#FFFFFF" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
           </View>
         )}
 
@@ -647,6 +663,11 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     backgroundColor: "#10B981",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagesLoadingContainer: {
+    height: 200,
     justifyContent: "center",
     alignItems: "center",
   },

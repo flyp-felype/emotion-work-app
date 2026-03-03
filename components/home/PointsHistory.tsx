@@ -7,7 +7,7 @@ import { ThemedText } from "../themed-text";
 interface PointsHistoryProps {
   transactions: {
     id: string;
-    transaction_type: "checkin" | "checkount";
+    transaction_type: "checkin" | "checkout";
     points: number;
     description: string;
     date: string;
