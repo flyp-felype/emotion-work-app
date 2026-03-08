@@ -47,6 +47,8 @@ function CustomCheckInButton({ children, onPress }: any) {
 export default function TabLayout() {
   const tintColor = useThemeColor({}, "tint");
   const iconColor = useThemeColor({}, "icon");
+  const backgroundColor = useThemeColor({}, "background");
+  const borderColor = useThemeColor({ light: "#E5E7EB", dark: "#2D2D2D" }, "background");
   const insets = useSafeAreaInsets();
 
   return (
@@ -57,9 +59,9 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
+          backgroundColor,
           borderTopWidth: 1,
-          borderTopColor: "#E5E7EB",
+          borderTopColor: borderColor,
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
           paddingTop: 8,

@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://65.108.151.196:8000",
+  baseURL: "http://46.224.90.99",
   timeout: 10000,
 });
 

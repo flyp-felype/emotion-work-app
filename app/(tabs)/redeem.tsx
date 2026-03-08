@@ -16,7 +16,7 @@ import {
 import { ThemedText } from "../../components/themed-text";
 import { AbstractImage, getMe, getRandomImages, postCheckin } from "../../services/api";
 
-const API_BASE_URL = "http://65.108.151.196";
+const API_BASE_URL = "http://46.224.90.99";
 
 type EmotionType = "very-happy" | "happy" | "neutral" | "sad" | "very-sad";
 type ImageType = string; // image id from API
