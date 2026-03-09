@@ -1,9 +1,8 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -15,38 +14,27 @@ import { ThemedText } from "../../../components/themed-text";
 
 export default function RedeemScreen() {
   const params = useLocalSearchParams();
-  const { storeId, storeName, couponId, couponName, couponPoints } = params;
+  const {
+    voucherUuid,
+    promotionTitle,
+    promotionIcon,
+    promotionPoints,
+    promotionDescription,
+    expiresAt,
+    status,
+    storeName,
+  } = params;
 
-  const [qrCodeData, setQrCodeData] = useState("");
-  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [timeRemaining, setTimeRemaining] = useState("");
 
-  useEffect(() => {
-    // Gerar QR Code
-    const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() + 7); // 1 semana
-    setExpiresAt(expirationDate);
-
-    // Dados do QR Code (por enquanto simples, depois você adiciona mais campos)
-    const qrData = JSON.stringify({
-      couponId,
-      storeId,
-      userId: "user-123", // Pegar do contexto
-      timestamp: new Date().toISOString(),
-      expiresAt: expirationDate.toISOString(),
-      singleUse: true,
-    });
-
-    setQrCodeData(qrData);
-  }, []);
+  const expirationDate = expiresAt ? new Date(expiresAt as string) : null;
 
   useEffect(() => {
-    // Atualizar tempo restante
     const updateTime = () => {
-      if (!expiresAt) return;
+      if (!expirationDate) return;
 
       const now = new Date();
-      const diff = expiresAt.getTime() - now.getTime();
+      const diff = expirationDate.getTime() - now.getTime();
 
       if (diff <= 0) {
         setTimeRemaining("Expirado");
@@ -59,37 +47,32 @@ export default function RedeemScreen() {
       );
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-      setTimeRemaining(`${days}d ${hours}h ${minutes}min`);
+      if (days > 0) {
+        setTimeRemaining(`${days}d ${hours}h ${minutes}min`);
+      } else {
+        setTimeRemaining(`${hours}h ${minutes}min`);
+      }
     };
 
     updateTime();
-    const interval = setInterval(updateTime, 60000); // Atualizar a cada minuto
-
+    const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, [expiresAt]);
 
-  const handleConfirmUsage = () => {
-    Alert.alert(
-      "Confirmar Uso",
-      "Ao confirmar, este cupom será usado e não poderá ser resgatado novamente. Deseja continuar?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Confirmar",
-          style: "default",
-          onPress: () => {
-            // Aqui você enviaria para o backend marcar como usado
-            Alert.alert("Sucesso!", "Cupom utilizado com sucesso!", [
-              {
-                text: "OK",
-                onPress: () => router.back(),
-              },
-            ]);
-          },
-        },
-      ]
-    );
-  };
+  const qrCodeData = voucherUuid
+    ? JSON.stringify({
+      voucherUuid,
+      issuedAt: new Date().toISOString(),
+    })
+    : "";
+
+  const formattedExpiry = expirationDate
+    ? expirationDate.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+    : "";
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -101,12 +84,12 @@ export default function RedeemScreen() {
         style={styles.header}
       >
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.push("/(tabs)")}
           style={styles.backButton}
         >
           <FontAwesome name="arrow-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Resgatar Cupom</ThemedText>
+        <ThemedText style={styles.headerTitle}>Voucher Gerado</ThemedText>
         <View style={styles.headerRight} />
       </LinearGradient>
 
@@ -128,15 +111,37 @@ export default function RedeemScreen() {
 
         {/* Coupon Info */}
         <View style={styles.infoCard}>
-          <ThemedText style={styles.couponName}>{couponName}</ThemedText>
+          <View style={styles.iconContainer}>
+            <MaterialIcons
+              name={(promotionIcon as any) || "local-offer"}
+              size={32}
+              color="#8B5CF6"
+            />
+          </View>
+          <ThemedText style={styles.couponName}>{promotionTitle}</ThemedText>
           <ThemedText style={styles.storeName}>{storeName}</ThemedText>
+
+          {promotionDescription ? (
+            <ThemedText style={styles.couponDescription}>
+              {promotionDescription}
+            </ThemedText>
+          ) : null}
 
           <View style={styles.pointsUsed}>
             <FontAwesome name="gift" size={14} color="#8B5CF6" />
             <ThemedText style={styles.pointsText}>
-              -{couponPoints} emotions
+              -{promotionPoints} emotions
             </ThemedText>
           </View>
+
+          {status ? (
+            <View style={styles.statusBadge}>
+              <MaterialIcons name="info" size={13} color="#059669" />
+              <ThemedText style={styles.statusText}>
+                Status: {status}
+              </ThemedText>
+            </View>
+          ) : null}
         </View>
 
         {/* QR Code */}
@@ -159,9 +164,14 @@ export default function RedeemScreen() {
                 Válido por:
               </ThemedText>
               <ThemedText style={styles.expirationTime}>
-                {timeRemaining}
+                {timeRemaining || formattedExpiry}
               </ThemedText>
             </View>
+            {formattedExpiry ? (
+              <ThemedText style={styles.expirationDate}>
+                Expira em {formattedExpiry}
+              </ThemedText>
+            ) : null}
             <ThemedText style={styles.expirationNote}>
               Use apenas uma vez • Não é reembolsável
             </ThemedText>
@@ -175,41 +185,21 @@ export default function RedeemScreen() {
           </ThemedText>
 
           <View style={styles.instructionsList}>
-            <View style={styles.instructionItem}>
-              <View style={styles.instructionNumber}>
-                <ThemedText style={styles.instructionNumberText}>1</ThemedText>
+            {[
+              "Vá até o estabelecimento parceiro",
+              "Mostre este QR Code ao atendente",
+              "O atendente irá escanear o código",
+              "Aproveite seu benefício!",
+            ].map((step, i) => (
+              <View style={styles.instructionItem} key={i}>
+                <View style={styles.instructionNumber}>
+                  <ThemedText style={styles.instructionNumberText}>
+                    {i + 1}
+                  </ThemedText>
+                </View>
+                <ThemedText style={styles.instructionText}>{step}</ThemedText>
               </View>
-              <ThemedText style={styles.instructionText}>
-                Vá até o estabelecimento parceiro
-              </ThemedText>
-            </View>
-
-            <View style={styles.instructionItem}>
-              <View style={styles.instructionNumber}>
-                <ThemedText style={styles.instructionNumberText}>2</ThemedText>
-              </View>
-              <ThemedText style={styles.instructionText}>
-                Mostre este QR Code ao atendente
-              </ThemedText>
-            </View>
-
-            <View style={styles.instructionItem}>
-              <View style={styles.instructionNumber}>
-                <ThemedText style={styles.instructionNumberText}>3</ThemedText>
-              </View>
-              <ThemedText style={styles.instructionText}>
-                O atendente irá escanear o código
-              </ThemedText>
-            </View>
-
-            <View style={styles.instructionItem}>
-              <View style={styles.instructionNumber}>
-                <ThemedText style={styles.instructionNumberText}>4</ThemedText>
-              </View>
-              <ThemedText style={styles.instructionText}>
-                Aproveite seu benefício!
-              </ThemedText>
-            </View>
+            ))}
           </View>
         </View>
 
@@ -217,8 +207,8 @@ export default function RedeemScreen() {
         <View style={styles.warningCard}>
           <FontAwesome name="exclamation-triangle" size={20} color="#F59E0B" />
           <ThemedText style={styles.warningText}>
-            Este cupom pode ser usado apenas uma vez e expira em 7 dias. Após o
-            uso, ele será automaticamente removido.
+            Este cupom pode ser usado apenas uma vez e expira na data indicada.
+            Após o uso, ele será automaticamente removido.
           </ThemedText>
         </View>
       </ScrollView>
@@ -238,10 +228,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 5,
@@ -291,26 +278,38 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     alignItems: "center",
+    gap: 8,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#F5F3FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
   },
   couponName: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#000000",
-    marginBottom: 4,
     textAlign: "center",
   },
   storeName: {
-    fontSize: 16,
+    fontSize: 15,
     color: "#666666",
-    marginBottom: 12,
+  },
+  couponDescription: {
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 19,
+    paddingHorizontal: 8,
   },
   pointsUsed: {
     flexDirection: "row",
@@ -326,6 +325,21 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#8B5CF6",
   },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ECFDF5",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    gap: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#059669",
+    fontWeight: "500",
+    textTransform: "capitalize",
+  },
   qrContainer: {
     marginHorizontal: 20,
     marginBottom: 20,
@@ -336,10 +350,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
@@ -358,12 +369,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderWidth: 1,
     borderColor: "#FED7AA",
+    gap: 6,
   },
   expirationRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 8,
   },
   expirationLabel: {
     fontSize: 14,
@@ -373,6 +384,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: "#92400E",
+  },
+  expirationDate: {
+    fontSize: 12,
+    color: "#92400E",
+    fontWeight: "500",
   },
   expirationNote: {
     fontSize: 12,
@@ -386,10 +402,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,

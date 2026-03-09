@@ -86,7 +86,13 @@ export default function HomeScreen() {
   };
 
   const handleRedeemProduct = (product: any) => {
-    router.push("/(tabs)/stores/redeem");
+    router.push({
+      pathname: "/(tabs)/stores/promotion-detail",
+      params: {
+        promotionId: product.uuid,
+        userPoints: meData?.balance ?? 0,
+      },
+    });
   };
 
   const handleViewAllProducts = () => {

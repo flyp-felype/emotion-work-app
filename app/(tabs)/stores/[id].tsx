@@ -42,18 +42,13 @@ export default function StoreDetailsScreen() {
   };
 
   const handleRedeemCoupon = (coupon: Promotion) => {
-    if (userPoints >= coupon.points_required && store) {
-      router.push({
-        pathname: "/(tabs)/stores/redeem",
-        params: {
-          storeId: store.uuid,
-          storeName: store.name,
-          couponId: coupon.uuid,
-          couponName: coupon.title,
-          couponPoints: coupon.points_required,
-        },
-      });
-    }
+    router.push({
+      pathname: "/(tabs)/stores/promotion-detail",
+      params: {
+        promotionId: coupon.uuid,
+        userPoints: userPoints,
+      },
+    });
   };
 
   if (loading) {
@@ -202,21 +197,12 @@ export default function StoreDetailsScreen() {
                   </View>
 
                   <TouchableOpacity
-                    style={[
-                      styles.redeemButton,
-                      !canRedeem && styles.redeemButtonDisabled,
-                    ]}
+                    style={styles.redeemButton}
                     onPress={() => handleRedeemCoupon(coupon)}
-                    disabled={!canRedeem}
                     activeOpacity={0.7}
                   >
-                    <ThemedText
-                      style={[
-                        styles.redeemButtonText,
-                        !canRedeem && styles.redeemButtonTextDisabled,
-                      ]}
-                    >
-                      {"Resgatar"}
+                    <ThemedText style={styles.redeemButtonText}>
+                      {"Ver detalhes"}
                     </ThemedText>
                   </TouchableOpacity>
                 </View>

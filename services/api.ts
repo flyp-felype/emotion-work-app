@@ -303,6 +303,59 @@ export const getPartnerPromotions = async (
   return response.data;
 };
 
+export interface PromotionDetail {
+  uuid: string;
+  partner_company: {
+    uuid: string;
+    name: string;
+    category: {
+      uuid: number;
+      name: string;
+      icon: string;
+    };
+  };
+  title: string;
+  icon: string;
+  points_required: number;
+  description: string;
+  expires_in_days: number;
+  max_vouchers: number;
+  is_active: boolean;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export const getPromotionDetail = async (
+  uuid: string
+): Promise<PromotionDetail> => {
+  const response = await api.get(`/partner-promotions/${uuid}`);
+  return response.data;
+};
+
+export interface Voucher {
+  id: number;
+  uuid: string;
+  promotion_id: number;
+  partner_company_id: number;
+  employee_id: number;
+  promotion_title: string;
+  promotion_icon: string;
+  promotion_points: number;
+  promotion_description: string;
+  promotion_expires_in_days: number;
+  issued_at: string;
+  expires_at: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const createVoucher = async (promotionUuid: string): Promise<Voucher> => {
+  const response = await api.post("/vouchers/", { promotion_uuid: promotionUuid });
+  return response.data;
+};
+
 export interface PartnerCategory {
   id: number;
   name: string;
