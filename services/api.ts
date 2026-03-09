@@ -333,6 +333,21 @@ export const getPromotionDetail = async (
   return response.data;
 };
 
+export interface VoucherPartnerCompany {
+  uuid: string;
+  name: string;
+  address: string;
+  phone: string;
+  business_hours: string;
+  description: string;
+  is_active: boolean;
+  category: {
+    id: number;
+    name: string;
+    icon: string;
+  };
+}
+
 export interface Voucher {
   id: number;
   uuid: string;
@@ -349,10 +364,36 @@ export interface Voucher {
   status: string;
   created_at: string;
   updated_at: string;
+  partner_company: VoucherPartnerCompany;
+  promotion?: {
+    uuid: string;
+    title: string;
+    icon: string;
+    points_required: number;
+    description: string;
+    expires_in_days: number;
+    max_vouchers: number;
+    is_active: boolean;
+    is_featured: boolean;
+    partner_company: VoucherPartnerCompany;
+  };
 }
 
 export const createVoucher = async (promotionUuid: string): Promise<Voucher> => {
   const response = await api.post("/vouchers/", { promotion_uuid: promotionUuid });
+  return response.data;
+};
+
+export interface VouchersResponse {
+  total: number;
+  vouchers: Voucher[];
+}
+
+export const getVouchers = async (
+  skip: number = 0,
+  limit: number = 100
+): Promise<VouchersResponse> => {
+  const response = await api.get("/vouchers/", { params: { skip, limit } });
   return response.data;
 };
 

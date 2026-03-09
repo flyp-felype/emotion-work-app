@@ -50,29 +50,6 @@ export default function HomeScreen() {
     }, [])
   );
 
-  const activeCoupons = [
-    {
-      id: "redeem-1",
-      couponId: "1",
-      storeId: "1",
-      storeName: "Starbucks Centro",
-      couponName: "Café Grátis",
-      couponPoints: 50,
-      expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 dias
-      used: false,
-    },
-    {
-      id: "redeem-2",
-      couponId: "2",
-      storeId: "2",
-      storeName: "McDonald's",
-      couponName: "Lanche Grátis",
-      couponPoints: 150,
-      expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 5 dias
-      used: false,
-    },
-  ];
-
   const handleCheckIn = () => {
     router.push("/(tabs)/redeem");
   };
@@ -133,7 +110,7 @@ export default function HomeScreen() {
           </View>
 
           <View>
-            <ActiveCoupons coupons={activeCoupons} />
+            <ActiveCoupons />
           </View>
 
           <View style={styles.section}>

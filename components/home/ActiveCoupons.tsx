@@ -1,36 +1,41 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { getVouchers, Voucher } from "../../services/api";
 import { ThemedText } from "../themed-text";
 
-interface Coupon {
-  id: string;
-  couponId: string;
-  storeId: string;
-  storeName: string;
-  couponName: string;
-  couponPoints: number;
-  expiresAt: string;
-  used: boolean;
-}
+export function ActiveCoupons() {
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [loading, setLoading] = useState(true);
 
-interface ActiveCouponsProps {
-  coupons: Coupon[];
-}
+  useEffect(() => {
+    loadVouchers();
+  }, []);
 
-export function ActiveCoupons({ coupons }: ActiveCouponsProps) {
-  // Filtrar apenas cupons ativos (não usados e não expirados)
-  const activeCoupons = coupons.filter((coupon) => {
-    if (coupon.used) return false;
-    const expiryDate = new Date(coupon.expiresAt);
-    return expiryDate > new Date();
-  });
-
-  if (activeCoupons.length === 0) {
-    return null; // Não mostra nada se não tiver cupons
-  }
+  const loadVouchers = async () => {
+    try {
+      setLoading(true);
+      const data = await getVouchers();
+      // Only show active (non-expired) vouchers
+      const active = data.vouchers.filter((v) => {
+        if (v.status === "used") return false;
+        return new Date(v.expires_at) > new Date();
+      });
+      setVouchers(active);
+    } catch (error) {
+      console.error("Erro ao carregar vouchers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getTimeRemaining = (expiresAt: string) => {
     const now = new Date();
@@ -46,18 +51,33 @@ export function ActiveCoupons({ coupons }: ActiveCouponsProps) {
     return `${hours}h restantes`;
   };
 
-  const handleCouponPress = (coupon: Coupon) => {
+  const handleVoucherPress = (voucher: Voucher) => {
     router.push({
       pathname: "/(tabs)/stores/redeem",
       params: {
-        storeId: coupon.storeId,
-        storeName: coupon.storeName,
-        couponId: coupon.couponId,
-        couponName: coupon.couponName,
-        couponPoints: coupon.couponPoints,
+        voucherUuid: voucher.uuid,
+        promotionTitle: voucher.promotion_title,
+        promotionIcon: voucher.promotion_icon,
+        promotionPoints: voucher.promotion_points,
+        promotionDescription: voucher.promotion_description,
+        expiresAt: voucher.expires_at,
+        status: voucher.status,
+        storeName: voucher.partner_company.name,
       },
     });
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color="#8B5CF6" />
+      </View>
+    );
+  }
+
+  if (vouchers.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -67,9 +87,7 @@ export function ActiveCoupons({ coupons }: ActiveCouponsProps) {
           <ThemedText style={styles.title}>Meus Cupons Ativos</ThemedText>
         </View>
         <View style={styles.badge}>
-          <ThemedText style={styles.badgeText}>
-            {activeCoupons.length}
-          </ThemedText>
+          <ThemedText style={styles.badgeText}>{vouchers.length}</ThemedText>
         </View>
       </View>
 
@@ -78,11 +96,11 @@ export function ActiveCoupons({ coupons }: ActiveCouponsProps) {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {activeCoupons.map((coupon) => (
+        {vouchers.map((voucher) => (
           <TouchableOpacity
-            key={coupon.id}
+            key={voucher.uuid}
             style={styles.couponCard}
-            onPress={() => handleCouponPress(coupon)}
+            onPress={() => handleVoucherPress(voucher)}
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -91,7 +109,7 @@ export function ActiveCoupons({ coupons }: ActiveCouponsProps) {
               end={{ x: 1, y: 1 }}
               style={styles.gradient}
             >
-              {/* Animated pulse effect */}
+              {/* Active indicator */}
               <View style={styles.pulseIndicator}>
                 <View style={styles.pulseOuter}>
                   <View style={styles.pulseInner} />
@@ -99,21 +117,25 @@ export function ActiveCoupons({ coupons }: ActiveCouponsProps) {
               </View>
 
               <View style={styles.cardContent}>
-                <View style={styles.qrIconContainer}>
-                  <FontAwesome name="qrcode" size={40} color="#FFFFFF" />
+                <View style={styles.iconContainer}>
+                  <MaterialIcons
+                    name={(voucher.promotion_icon as any) || "local-offer"}
+                    size={36}
+                    color="#FFFFFF"
+                  />
                 </View>
 
                 <ThemedText style={styles.couponName} numberOfLines={2}>
-                  {coupon.couponName}
+                  {voucher.promotion_title}
                 </ThemedText>
                 <ThemedText style={styles.storeName} numberOfLines={1}>
-                  {coupon.storeName}
+                  {voucher.partner_company.name}
                 </ThemedText>
 
                 <View style={styles.expiryBadge}>
                   <FontAwesome name="clock-o" size={10} color="#FFF" />
                   <ThemedText style={styles.expiryText}>
-                    {getTimeRemaining(coupon.expiresAt)}
+                    {getTimeRemaining(voucher.expires_at)}
                   </ThemedText>
                 </View>
 
@@ -133,6 +155,10 @@ export function ActiveCoupons({ coupons }: ActiveCouponsProps) {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
   container: {
     marginBottom: 24,
   },
@@ -176,10 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
@@ -212,12 +235,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-between",
   },
-  qrIconContainer: {
+  iconContainer: {
     alignSelf: "center",
     marginTop: 8,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   couponName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
     color: "#FFFFFF",
     textAlign: "center",
