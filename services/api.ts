@@ -230,6 +230,20 @@ export const getMe = async (): Promise<MeResponse> => {
   return response.data;
 };
 
+export interface UpdateEmployeeRequest {
+  name: string;
+  registration: string;
+  department: string;
+  phone: string;
+}
+
+export const updateEmployee = async (
+  uuid: string,
+  data: UpdateEmployeeRequest
+): Promise<void> => {
+  await api.put(`/employees/${uuid}`, data);
+};
+
 export interface PartnerCompany {
   uuid: string;
   name: string;

@@ -1,8 +1,10 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -15,54 +17,110 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "../../../components/themed-text";
+import { getMe, MeResponse, updateEmployee } from "../../../services/api";
 
 export default function MyDataScreen() {
-  const [name, setName] = useState("João Silva");
-  const [email, setEmail] = useState("joao.silva@empresa.com");
-  const [birthDate, setBirthDate] = useState("15/03/1990");
+  const [meData, setMeData] = useState<MeResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleSave = () => {
-    // Validações básicas
+  // Editable fields
+  const [name, setName] = useState("");
+  const [registration, setRegistration] = useState("");
+  const [department, setDepartment] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // Original values to restore on cancel
+  const [original, setOriginal] = useState({
+    name: "",
+    registration: "",
+    department: "",
+    phone: "",
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const data = await getMe();
+      setMeData(data);
+      const fields = {
+        name: data.employee.name ?? "",
+        registration: data.employee.registration ?? "",
+        department: data.employee.department ?? "",
+        phone: data.employee.phone ?? "",
+      };
+      setName(fields.name);
+      setRegistration(fields.registration);
+      setDepartment(fields.department);
+      setPhone(fields.phone);
+      setOriginal(fields);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      Alert.alert("Erro", "Não foi possível carregar seus dados.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert("Atenção", "Por favor, preencha o nome.");
       return;
     }
 
-    if (!email.trim() || !email.includes("@")) {
-      Alert.alert("Atenção", "Por favor, preencha um email válido.");
-      return;
+    if (!meData) return;
+
+    try {
+      setSaving(true);
+      await updateEmployee(meData.employee.uuid, {
+        name: name.trim(),
+        registration: registration.trim(),
+        department: department.trim(),
+        phone: phone.trim(),
+      });
+
+      const updated = { name: name.trim(), registration: registration.trim(), department: department.trim(), phone: phone.trim() };
+      setOriginal(updated);
+      setIsEditing(false);
+
+      Alert.alert("Sucesso", "Seus dados foram atualizados com sucesso!");
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.detail ||
+        "Não foi possível salvar os dados. Tente novamente.";
+      Alert.alert("Erro", message);
+    } finally {
+      setSaving(false);
     }
-
-    if (!birthDate.trim()) {
-      Alert.alert("Atenção", "Por favor, preencha a data de nascimento.");
-      return;
-    }
-
-    // Aqui você implementaria a lógica de salvamento
-    console.log("Salvando dados:", { name, email, birthDate });
-
-    Alert.alert("Sucesso", "Seus dados foram atualizados com sucesso!", [
-      {
-        text: "OK",
-        onPress: () => {
-          setIsEditing(false);
-          // router.back();
-        },
-      },
-    ]);
   };
 
   const handleCancel = () => {
-    // Restaurar valores originais
-    setName("João Silva");
-    setEmail("joao.silva@empresa.com");
-    setBirthDate("15/03/1990");
+    setName(original.name);
+    setRegistration(original.registration);
+    setDepartment(original.department);
+    setPhone(original.phone);
     setIsEditing(false);
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <StatusBar style="light" />
+        <ActivityIndicator size="large" color="#8B5CF6" />
+        <ThemedText style={styles.loadingText}>Carregando seus dados...</ThemedText>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      <StatusBar style="light" />
+
       {/* Header */}
       <LinearGradient
         colors={["#8B5CF6", "#F87171"]}
@@ -70,10 +128,7 @@ export default function MyDataScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <FontAwesome name="arrow-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Meus Dados</ThemedText>
@@ -90,17 +145,39 @@ export default function MyDataScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Info Card */}
+          {/* Avatar Card */}
           <View style={styles.infoCard}>
             <View style={styles.avatarContainer}>
               <FontAwesome name="user-circle" size={80} color="#8B5CF6" />
-              <TouchableOpacity style={styles.editAvatarButton}>
+              <View style={styles.editAvatarButton}>
                 <FontAwesome name="camera" size={16} color="#FFFFFF" />
-              </TouchableOpacity>
+              </View>
+            </View>
+            <ThemedText style={styles.userName}>{name || "—"}</ThemedText>
+            <ThemedText style={styles.userEmail}>
+              {meData?.user.email ?? "—"}
+            </ThemedText>
+          </View>
+
+          {/* Read-only info */}
+          <View style={styles.readOnlyCard}>
+            <View style={styles.readOnlyRow}>
+              <FontAwesome name="envelope-o" size={14} color="#8B5CF6" />
+              <ThemedText style={styles.readOnlyLabel}>Email</ThemedText>
+              <ThemedText style={styles.readOnlyValue} numberOfLines={1}>
+                {meData?.user.email ?? "—"}
+              </ThemedText>
+            </View>
+            <View style={styles.readOnlyRow}>
+              <FontAwesome name="id-badge" size={14} color="#8B5CF6" />
+              <ThemedText style={styles.readOnlyLabel}>Matrícula</ThemedText>
+              <ThemedText style={styles.readOnlyValue}>
+                {meData?.employee.registration ?? "—"}
+              </ThemedText>
             </View>
           </View>
 
-          {/* Form Card */}
+          {/* Editable Form */}
           <View style={styles.formCard}>
             <ThemedText style={styles.sectionTitle}>
               Informações Pessoais
@@ -109,13 +186,8 @@ export default function MyDataScreen() {
             {/* Nome */}
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Nome Completo</ThemedText>
-              <View style={styles.inputContainer}>
-                <FontAwesome
-                  name="user"
-                  size={16}
-                  color="#999999"
-                  style={styles.inputIcon}
-                />
+              <View style={[styles.inputContainer, !isEditing && styles.inputContainerDisabled]}>
+                <FontAwesome name="user" size={16} color="#999999" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={name}
@@ -127,60 +199,41 @@ export default function MyDataScreen() {
               </View>
             </View>
 
-            {/* Email */}
+            {/* Departamento */}
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Email</ThemedText>
-              <View style={styles.inputContainer}>
-                <FontAwesome
-                  name="envelope"
-                  size={16}
-                  color="#999999"
-                  style={styles.inputIcon}
-                />
+              <ThemedText style={styles.label}>Departamento</ThemedText>
+              <View style={[styles.inputContainer, !isEditing && styles.inputContainerDisabled]}>
+                <FontAwesome name="building-o" size={16} color="#999999" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Digite seu email"
+                  value={department}
+                  onChangeText={setDepartment}
+                  placeholder="Digite seu departamento"
                   placeholderTextColor="#CCCCCC"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
                   editable={isEditing}
                 />
               </View>
             </View>
 
-            {/* Data de Nascimento */}
+            {/* Telefone */}
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Data de Nascimento</ThemedText>
-              <View style={styles.inputContainer}>
-                <FontAwesome
-                  name="calendar"
-                  size={16}
-                  color="#999999"
-                  style={styles.inputIcon}
-                />
+              <ThemedText style={styles.label}>Telefone</ThemedText>
+              <View style={[styles.inputContainer, !isEditing && styles.inputContainerDisabled]}>
+                <FontAwesome name="phone" size={16} color="#999999" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  value={birthDate}
-                  onChangeText={setBirthDate}
-                  placeholder="DD/MM/AAAA"
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="(00) 00000-0000"
                   placeholderTextColor="#CCCCCC"
-                  keyboardType="numeric"
-                  maxLength={10}
+                  keyboardType="phone-pad"
                   editable={isEditing}
                 />
               </View>
-            </View>
-
-            {/* Info apenas leitura */}
-            <View style={styles.readOnlySection}>
-              <ThemedText style={styles.readOnlyLabel}>Matrícula</ThemedText>
-              <ThemedText style={styles.readOnlyValue}>123456</ThemedText>
             </View>
           </View>
 
-          {/* Botões */}
+          {/* Buttons */}
           {!isEditing ? (
             <TouchableOpacity
               style={styles.editButton}
@@ -203,6 +256,7 @@ export default function MyDataScreen() {
                 style={styles.cancelButton}
                 onPress={handleCancel}
                 activeOpacity={0.8}
+                disabled={saving}
               >
                 <Text style={styles.cancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
@@ -211,6 +265,7 @@ export default function MyDataScreen() {
                 style={styles.saveButton}
                 onPress={handleSave}
                 activeOpacity={0.8}
+                disabled={saving}
               >
                 <LinearGradient
                   colors={["#8B5CF6", "#F87171"]}
@@ -218,8 +273,14 @@ export default function MyDataScreen() {
                   end={{ x: 1, y: 1 }}
                   style={styles.saveButtonGradient}
                 >
-                  <FontAwesome name="check" size={18} color="#FFFFFF" />
-                  <Text style={styles.saveButtonText}>Salvar</Text>
+                  {saving ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <FontAwesome name="check" size={18} color="#FFFFFF" />
+                  )}
+                  <Text style={styles.saveButtonText}>
+                    {saving ? "Salvando..." : "Salvar"}
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -233,7 +294,16 @@ export default function MyDataScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "#8B5CF6",
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#666666",
   },
   header: {
     flexDirection: "row",
@@ -242,10 +312,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 5,
@@ -266,6 +333,7 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
+    backgroundColor: "#F8F9FA",
   },
   content: {
     flex: 1,
@@ -277,21 +345,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     marginHorizontal: 20,
     marginTop: 20,
-    marginBottom: 16,
+    marginBottom: 12,
     borderRadius: 12,
-    padding: 20,
+    padding: 24,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    gap: 6,
   },
   avatarContainer: {
     position: "relative",
+    marginBottom: 8,
   },
   editAvatarButton: {
     position: "absolute",
@@ -306,6 +373,49 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#FFFFFF",
   },
+  userName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+  userEmail: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+  readOnlyCard: {
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  readOnlyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  readOnlyLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#6B7280",
+    flex: 1,
+  },
+  readOnlyValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+    maxWidth: "55%",
+    textAlign: "right",
+  },
   formCard: {
     backgroundColor: "#FFFFFF",
     marginHorizontal: 20,
@@ -313,10 +423,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
@@ -328,13 +435,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
-    color: "#666666",
-    marginBottom: 8,
+    color: "#6B7280",
+    marginBottom: 6,
   },
   inputContainer: {
     flexDirection: "row",
@@ -345,32 +452,17 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     paddingHorizontal: 12,
   },
+  inputContainerDisabled: {
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
+  },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
     paddingVertical: 12,
-    fontSize: 16,
-    color: "#000000",
-  },
-  readOnlySection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-    marginTop: 4,
-  },
-  readOnlyLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#666666",
-  },
-  readOnlyValue: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
     color: "#000000",
   },
   editButton: {
