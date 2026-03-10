@@ -87,6 +87,7 @@ export default function StoresScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      {/* <StatusBar style="light" /> */}
       {/* Header */}
       <LinearGradient
         colors={["#8B5CF6", "#F87171"]}
@@ -223,7 +224,7 @@ export default function StoresScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "#8B5CF6",
   },
   header: {
     flexDirection: "row",

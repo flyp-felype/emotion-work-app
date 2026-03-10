@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -103,6 +104,7 @@ export default function PromotionDetailScreen() {
 
     return (
         <SafeAreaView style={styles.container} edges={["top"]}>
+            <StatusBar style="light" />
             {/* Header */}
             <LinearGradient
                 colors={["#8B5CF6", "#F87171"]}
@@ -126,7 +128,7 @@ export default function PromotionDetailScreen() {
                 <View style={styles.heroCard}>
                     <View style={styles.iconContainer}>
                         <MaterialIcons
-                            name={(promotion.icon as any) || "local-offer"}
+                            name={(promotion.icon.replace('_', '-') as any) || "local-offer"}
                             size={56}
                             color="#8B5CF6"
                         />
@@ -277,7 +279,7 @@ export default function PromotionDetailScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F8F9FA",
+        backgroundColor: "#8B5CF6",
     },
     centerContent: {
         justifyContent: "center",
