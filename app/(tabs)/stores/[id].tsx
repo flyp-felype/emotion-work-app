@@ -99,7 +99,7 @@ export default function StoreDetailsScreen() {
         {/* Store Info Card */}
         <View style={styles.storeCard}>
           <View style={styles.storeIconContainer}>
-            <MaterialIcons name={(store.category.icon as any) || "store"} size={48} color="#8B5CF6" />
+            <MaterialIcons name={(store.category.icon.replace('_', '-') as any) || "store"} size={48} color="#8B5CF6" />
           </View>
           <ThemedText style={styles.storeName}>{store.name}</ThemedText>
           <ThemedText style={styles.storeCategory}>{store.category.name}</ThemedText>

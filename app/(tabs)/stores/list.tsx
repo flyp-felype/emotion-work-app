@@ -140,8 +140,9 @@ export default function StoresScreen() {
             onPress={() => setSelectedCategory(category.id)}
             activeOpacity={0.7}
           >
+
             <MaterialIcons
-              name={category.icon as any}
+              name={category.icon.replace('_', '-') as any}
               size={18}
               color={selectedCategory === category.id ? "#FFFFFF" : "#666666"}
             />
@@ -181,7 +182,7 @@ export default function StoresScreen() {
             >
               <View style={styles.storeIconContainer}>
                 <MaterialIcons
-                  name={company.category.icon as any}
+                  name={company.category.icon.replace('_', '-') as any}
                   size={24}
                   color="#8B5CF6"
                 />

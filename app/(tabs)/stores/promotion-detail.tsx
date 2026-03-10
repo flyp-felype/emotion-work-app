@@ -432,6 +432,7 @@ const styles = StyleSheet.create({
     },
     pointsValue: {
         fontSize: 28,
+        lineHeight: 32,
         fontWeight: "800",
         color: "#FFFFFF",
     },

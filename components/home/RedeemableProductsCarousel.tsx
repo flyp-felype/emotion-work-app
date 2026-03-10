@@ -168,7 +168,7 @@ export function RedeemableProductsCarousel({
                   {product.icon ? (
                     <View style={styles.iconContainer}>
                       <MaterialIcons
-                        name={product.icon as any}
+                        name={product.icon.replace('_', '-') as any}
                         size={32}
                         color={canRedeemProduct ? "#8B5CF6" : "#CCCCCC"}
                       />

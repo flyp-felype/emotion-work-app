@@ -57,7 +57,7 @@ export function ActiveCoupons() {
       params: {
         voucherUuid: voucher.uuid,
         promotionTitle: voucher.promotion_title,
-        promotionIcon: voucher.promotion_icon,
+        promotionIcon: voucher.promotion_icon.replace('_', '-'),
         promotionPoints: voucher.promotion_points,
         promotionDescription: voucher.promotion_description,
         expiresAt: voucher.expires_at,
@@ -119,7 +119,7 @@ export function ActiveCoupons() {
               <View style={styles.cardContent}>
                 <View style={styles.iconContainer}>
                   <MaterialIcons
-                    name={(voucher.promotion_icon as any) || "local-offer"}
+                    name={(voucher.promotion_icon.replace('_', '-') as any) || "local-offer"}
                     size={36}
                     color="#FFFFFF"
                   />
