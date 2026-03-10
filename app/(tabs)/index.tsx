@@ -6,7 +6,6 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionButtons } from "../../components/home/ActionButtons";
 import { ActiveCoupons } from "../../components/home/ActiveCoupons";
-import { AnnouncementsBoard } from "../../components/home/AnnouncementsBoard";
 import { HomeHeader } from "../../components/home/HomeHeader";
 import { PointsHistory } from "../../components/home/PointsHistory";
 import { RedeemableProductsCarousel } from "../../components/home/RedeemableProductsCarousel";
@@ -136,9 +135,9 @@ export default function HomeScreen() {
             />
           </View>
 
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <AnnouncementsBoard />
-          </View>
+          </View> */}
         </ScrollView>
       </LinearGradient>
     </SafeAreaView>

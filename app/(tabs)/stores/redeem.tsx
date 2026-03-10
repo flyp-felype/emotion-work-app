@@ -221,7 +221,7 @@ export default function RedeemScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#8B5CF6",
+    backgroundColor: "#F8F9FA",
   },
   header: {
     flexDirection: "row",
